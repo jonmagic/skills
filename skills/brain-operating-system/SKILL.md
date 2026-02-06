@@ -17,9 +17,8 @@ Navigation guide for jonmagic's second-brain workspace covering directory intent
 | `Executive Summaries/YYYY-MM-DD/` | Distilled updates for leadership | Keep concise (1–2 pages). Reference snippets and priorities. |
 | `Meeting Notes/<team-or-person>.md` | Rolling notes with `## YYYY-MM-DD` sections | Link to transcripts/summaries via wikilinks. New dates append at top. |
 | `Projects/<slug>/` | Multi-week initiatives | Use README-like overviews, milestone logs, resource links. |
+| `Transcripts/YYYY-MM-DD/` | Archived source materials (GitHub convos, meeting transcripts) | Sequential numbering (`01.md`, `02.md`). Reference via wikilinks. |
 | `Archive/YYYY-MM-DD/` | Cold-storage for inactive artifacts | Only move files once captured elsewhere. |
-
-Other directories (`Feedback/`, `Transcripts/`, `Templates/`, etc.) follow similar patterns—check existing files before adding content.
 
 ## Naming Conventions
 
@@ -32,7 +31,8 @@ Other directories (`Feedback/`, `Transcripts/`, `Templates/`, etc.) follow simil
 
 ### Append-Only Discipline
 
-- **Daily Projects, Weekly Notes, Meeting Notes**: Always append new entries at top (reverse-chronological)
+- **Weekly Notes, Meeting Notes**: Always append new entries at top (reverse-chronological)
+- **Daily Projects**: When asked append a running log of steps to the bottom of the existing file
 - **Context files** (e.g., `snippets-context-*.txt`, `retro-context-*.txt`): Always append to end, never edit middle sections
 - **Snippets, Executive Summaries**: Create new files for new time periods
 
@@ -71,7 +71,6 @@ Before editing any document:
 3. Is it accomplishment tracking? → `Snippets/YYYY-MM-DD-to-YYYY-MM-DD.md`
 4. Is it a meeting record? → `Meeting Notes/<person-or-team>.md` (append new `## YYYY-MM-DD` section)
 5. Is it multi-week scope? → `Projects/<slug>/`
-6. Is it feedback? → `Feedback/`
-7. Is it a transcript? → `Transcripts/`
+6. Is it a transcript? → `Transcripts/YYYY-MM-DD/`
 
 **When in doubt**: Start in `Daily Projects/YYYY-MM-DD/` and migrate later if it becomes evergreen.

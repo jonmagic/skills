@@ -135,7 +135,7 @@
             font-style: italic;
         }
 
-        /* Code */
+        /* Code - inline */
         code {
             padding: 0.2em 0.4em;
             margin: 0;
@@ -144,6 +144,27 @@
             border: 1px solid var(--subtle-border);
             border-radius: var(--border-radius-small);
             font-family: var(--font-mono);
+            color: var(--text);
+        }
+
+        /* Code blocks */
+        pre {
+            background-color: var(--subtle-bg);
+            border: 1px solid var(--subtle-border);
+            border-radius: var(--border-radius-medium);
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            box-shadow: var(--shadow-small);
+        }
+
+        pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.875rem;
+            line-height: 1.5;
             color: var(--text);
         }
 

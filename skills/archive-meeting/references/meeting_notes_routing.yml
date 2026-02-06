@@ -1,0 +1,16 @@
+# Manual overrides / aliases for routing a meeting to a Meeting Notes file.
+#
+# Format:
+# - target: Meeting Notes basename (without extension)
+#   match_any:
+#     - any string that should force/strongly suggest this target
+#
+# Notes:
+# - Keep match strings lowercase; matching should be case-insensitive.
+# - Use this when auto-routing is frequently wrong or ambiguous.
+
+- target: JAE
+  match_any:
+    - jae
+    - andrew dillon
+    - erik hefferly

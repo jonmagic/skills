@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+
+# Create a daily project file for a Copilot session
+#
+# Usage: create-daily-project --focus "Topic" --session-id UUID --transcript FILE [--brain-path PATH]
+#
+# Creates: Daily Projects/YYYY-MM-DD/NN topic.md
+# Outputs: The created file path
+
+require 'optparse'
+require 'date'
+require 'fileutils'
+
+options = {
+  brain_path: File.expand_path("~/Brain")
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: create-daily-project --focus TOPIC --session-id UUID --transcript FILE"
+
+  opts.on("--focus TOPIC", "Session focus/topic (required)") do |f|
+    options[:focus] = f
+  end
+
+  opts.on("--session-id ID", "Session UUID (required)") do |id|
+    options[:session_id] = id
+  end
+
+  opts.on("--transcript FILE", "Path to transcript markdown file (required)") do |f|
+    options[:transcript] = f
+  end
+
+  opts.on("--brain-path PATH", "Path to brain repo (default: ~/Brain)") do |p|
+    options[:brain_path] = File.expand_path(p)
+  end
+
+  opts.on("-h", "--help", "Show this help") do
+    puts opts
+    exit
+  end
+end.parse!
+
+# Validate required options
+missing = []
+missing << "--focus" unless options[:focus]
+missing << "--session-id" unless options[:session_id]
+missing << "--transcript" unless options[:transcript]
+
+unless missing.empty?
+  STDERR.puts "Error: Missing required options: #{missing.join(', ')}"
+  exit 1
+end
+
+unless File.exist?(options[:transcript])
+  STDERR.puts "Error: Transcript file not found: #{options[:transcript]}"
+  exit 1
+end
+
+# Determine today's folder
+today = Date.today.strftime("%Y-%m-%d")
+daily_dir = File.join(options[:brain_path], "Daily Projects", today)
+FileUtils.mkdir_p(daily_dir)
+
+# Find next sequential number
+existing = Dir.glob(File.join(daily_dir, "*.md")).map do |f|
+  basename = File.basename(f)
+  if basename =~ /^(\d+)/
+    $1.to_i
+  else
+    0
+  end
+end
+next_num = (existing.max || 0) + 1
+num_str = format("%02d", next_num)
+
+# Create file
+filename = "#{num_str} #{options[:focus]}.md"
+filepath = File.join(daily_dir, filename)
+
+# Read transcript content
+transcript_content = File.read(options[:transcript])
+
+# Build file content
+content = []
+content << "# #{options[:focus]}"
+content << ""
+content << "**Session ID**: `#{options[:session_id]}`"
+content << "**Date**: #{today}"
+content << "**Resume**: `copilot --resume=#{options[:session_id]}`"
+content << ""
+content << "---"
+content << ""
+content << transcript_content
+
+File.write(filepath, content.join("\n"))
+
+# Output the created file path (for use by the agent)
+puts filepath

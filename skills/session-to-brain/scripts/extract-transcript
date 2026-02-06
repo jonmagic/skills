@@ -1,0 +1,93 @@
+#!/usr/bin/env ruby
+
+# Extract a readable transcript from a Copilot CLI session's events.jsonl
+#
+# Usage: extract-transcript --session-id UUID [--output FILE]
+#
+# If --output is omitted, prints to stdout
+
+require 'json'
+require 'optparse'
+require 'time'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: extract-transcript --session-id UUID [--output FILE]"
+
+  opts.on("--session-id ID", "Session UUID (required)") do |id|
+    options[:session_id] = id
+  end
+
+  opts.on("--output FILE", "Output file path (optional, defaults to stdout)") do |file|
+    options[:output] = file
+  end
+
+  opts.on("-h", "--help", "Show this help") do
+    puts opts
+    exit
+  end
+end.parse!
+
+unless options[:session_id]
+  STDERR.puts "Error: --session-id is required"
+  exit 1
+end
+
+session_dir = File.expand_path("~/.copilot/session-state/#{options[:session_id]}")
+events_file = File.join(session_dir, "events.jsonl")
+
+unless File.exist?(events_file)
+  STDERR.puts "Error: Session not found at #{events_file}"
+  exit 1
+end
+
+# Parse events
+events = File.readlines(events_file).map { |line| JSON.parse(line) }
+
+# Extract session metadata
+session_start = events.find { |e| e["type"] == "session.start" }
+start_time = session_start&.dig("data", "startTime") || Time.now.iso8601
+context = session_start&.dig("data", "context") || {}
+
+# Build transcript from user and assistant messages
+transcript = []
+events.each do |event|
+  case event["type"]
+  when "user.message"
+    content = event.dig("data", "content")
+    next if content.nil? || content.strip.empty?
+    transcript << { role: "User", content: content, timestamp: event["timestamp"] }
+  when "assistant.message"
+    content = event.dig("data", "content")
+    next if content.nil? || content.strip.empty?
+    transcript << { role: "Assistant", content: content, timestamp: event["timestamp"] }
+  end
+end
+
+# Format output
+output = []
+output << "# Session Transcript"
+output << ""
+output << "**Session ID**: `#{options[:session_id]}`"
+output << "**Started**: #{start_time}"
+output << "**Working Directory**: #{context['cwd'] || 'unknown'}"
+output << "**Repository**: #{context['repository'] || 'unknown'}"
+output << ""
+output << "---"
+output << ""
+
+transcript.each do |msg|
+  output << "### #{msg[:role]}"
+  output << ""
+  output << msg[:content]
+  output << ""
+end
+
+result = output.join("\n")
+
+if options[:output]
+  File.write(options[:output], result)
+  puts "Transcript written to #{options[:output]}"
+else
+  puts result
+end

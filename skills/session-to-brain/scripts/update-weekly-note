@@ -1,0 +1,116 @@
+#!/usr/bin/env ruby
+
+# Update the weekly note with a session link
+#
+# Usage: update-weekly-note --focus "Topic" --session-id UUID --daily-project-path PATH [--brain-path PATH]
+#
+# Adds a bullet to today's section in the current weekly note
+
+require 'optparse'
+require 'date'
+
+options = {
+  brain_path: File.expand_path("~/Brain")
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: update-weekly-note --focus TOPIC --session-id UUID --daily-project-path PATH"
+
+  opts.on("--focus TOPIC", "Session focus/topic (required)") do |f|
+    options[:focus] = f
+  end
+
+  opts.on("--session-id ID", "Session UUID (required)") do |id|
+    options[:session_id] = id
+  end
+
+  opts.on("--daily-project-path PATH", "Path to the created daily project file (required)") do |p|
+    options[:daily_project_path] = p
+  end
+
+  opts.on("--brain-path PATH", "Path to brain repo (default: ~/Brain)") do |p|
+    options[:brain_path] = File.expand_path(p)
+  end
+
+  opts.on("-h", "--help", "Show this help") do
+    puts opts
+    exit
+  end
+end.parse!
+
+# Validate required options
+missing = []
+missing << "--focus" unless options[:focus]
+missing << "--session-id" unless options[:session_id]
+missing << "--daily-project-path" unless options[:daily_project_path]
+
+unless missing.empty?
+  STDERR.puts "Error: Missing required options: #{missing.join(', ')}"
+  exit 1
+end
+
+# Find the current weekly note
+# Weekly notes are named "Week of YYYY-MM-DD.md" where the date is the Monday of that week
+today = Date.today
+# Find the Monday of this week
+monday = today - (today.wday == 0 ? 6 : today.wday - 1)
+
+# Try a few date patterns (some weeks might start on different days)
+weekly_notes_dir = File.join(options[:brain_path], "Weekly Notes")
+weekly_note_path = nil
+
+# Check for week starting on Monday
+(-3..3).each do |offset|
+  check_date = monday + offset
+  candidate = File.join(weekly_notes_dir, "Week of #{check_date.strftime('%Y-%m-%d')}.md")
+  if File.exist?(candidate)
+    weekly_note_path = candidate
+    break
+  end
+end
+
+unless weekly_note_path
+  STDERR.puts "Error: Could not find weekly note for current week"
+  STDERR.puts "Looked in: #{weekly_notes_dir}"
+  exit 1
+end
+
+# Determine today's day name
+day_names = %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday]
+today_day = day_names[today.wday]
+
+# Read the weekly note
+content = File.read(weekly_note_path)
+lines = content.lines
+
+# Find the section for today
+today_section_idx = nil
+next_section_idx = nil
+
+lines.each_with_index do |line, idx|
+  if line.strip =~ /^##\s+#{today_day}/i
+    today_section_idx = idx
+  elsif today_section_idx && line.strip =~ /^##\s+/
+    next_section_idx = idx
+    break
+  end
+end
+
+unless today_section_idx
+  STDERR.puts "Error: Could not find '## #{today_day}' section in #{weekly_note_path}"
+  exit 1
+end
+
+# Build the wikilink path (relative to brain root)
+relative_path = options[:daily_project_path].sub(options[:brain_path] + "/", "").sub(/\.md$/, "")
+new_bullet = "- [[#{relative_path}|#{options[:focus]}]] `copilot --resume=#{options[:session_id]}`\n"
+
+# Insert after the section header
+insert_idx = today_section_idx + 1
+lines.insert(insert_idx, new_bullet)
+
+# Write back
+File.write(weekly_note_path, lines.join)
+
+puts "Updated #{weekly_note_path}"
+puts "Added: #{new_bullet.strip}"

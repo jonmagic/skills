@@ -105,6 +105,12 @@ end
 def resolve_image(src, md_dir, temp_dir)
   src = src.strip.gsub(/^["']|["']$/, '')
 
+  # URL-decode the path to handle spaces (%20) and other encoded characters
+  # but only for local paths, not for http(s) URLs which need encoding preserved
+  unless url?(src)
+    src = URI.decode_www_form_component(src)
+  end
+
   die('Internal error: asked to resolve a data: URI') if src.start_with?('data:')
 
   # 1) Relative to markdown

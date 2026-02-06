@@ -1,6 +1,6 @@
 ---
 name: executive-summary
-description: Create formal executive summaries from GitHub conversations or meeting transcripts. Use when generating leadership-ready summaries that distill key decisions, alternatives, outcomes, and next steps from complex conversations or meetings. Supports GitHub issues/PRs and transcript URIs (Zoom, Teams, etc.). Outputs are saved to Executive Summaries/ with date-organized structure.
+description: Create formal executive summaries from GitHub conversations or meeting transcripts. Use when generating leadership-ready summaries that distill key decisions, alternatives, outcomes, and next steps from complex conversations or meetings. Supports GitHub issues/PRs and transcript URIs (Zoom, Teams, etc.). Outputs are saved to Executive Summaries/ with date-organized structure, and source inputs are archived to Transcripts/ with matching naming.
 ---
 
 # Executive Summary Skill
@@ -10,7 +10,7 @@ Create formal, narrative-driven executive summaries for leadership and stakehold
 ## Related Skills
 
 **Use `brain-operating-system` skill** for:
-- Output directory structure and naming conventions (`Executive Summaries/YYYY-MM-DD/`)
+- Output directory structure and naming conventions (`Executive Summaries/YYYY-MM-DD/`, `Transcripts/YYYY-MM-DD/`)
 - Date folder creation patterns and file numbering
 
 **Use `voice-and-tone` skill** for:
@@ -68,7 +68,9 @@ For GitHub issues, pull requests, and discussions:
    - Handling alternative solutions and partial resolutions
    - Ignoring bot-generated events
 
-4. **Save the summary** to the correct location (see "Output Location & Naming" section below)
+4. **Archive the source conversation** to `Transcripts/YYYY-MM-DD/##.md` (use today's date; sequential numbering within each date folder). Format as markdown with the issue/PR title, metadata, body, and all comments preserved.
+
+5. **Save the summary** to `Executive Summaries/YYYY-MM-DD/##.md` (use today's date; sequential numbering within each date folder)
 
 ## Workflow: Meeting Transcripts
 
@@ -84,7 +86,9 @@ For Zoom, Teams, or other meeting transcripts:
    - Handling decisions and action items
    - Appropriate scope and constraints for transcript summaries
 
-4. **Save the summary** to `Executive Summaries/YYYY-MM-DD/##.md` (use today's date; sequential numbering within each date folder)
+4. **Archive the source transcript** to `Transcripts/YYYY-MM-DD/##.md` (use today's date; sequential numbering within each date folder). Preserve the full transcript text with speaker attributions.
+
+5. **Save the summary** to `Executive Summaries/YYYY-MM-DD/##.md` (use today's date; sequential numbering within each date folder)
 
 ## Quick Reference: Which Workflow?
 
@@ -101,3 +105,29 @@ For Zoom, Teams, or other meeting transcripts:
 - **Use participant names strategically**: Name decision-makers and key contributors; anonymize or skip minor commenters
 - **Link judiciously but comprehensively**: Every claim should be traceable; avoid standalone links
 - **Edit for density**: Remove connecting words, tighten sentences, but preserve clarity
+
+## Source Archival
+
+Source materials (GitHub conversations, meeting transcripts) are archived to `Transcripts/YYYY-MM-DD/##.md` for future reference. These archives:
+
+- **Follow the same naming pattern** as executive summaries (`YYYY-MM-DD/##.md`) but are stored independently
+- **Are not necessarily paired 1:1** with executive summaries - a transcript may exist without a summary, or vice versa
+- **Can be referenced from anywhere** in the brain: Meeting Notes, Weekly Notes, Daily Projects, or other documents via wikilinks
+
+### Naming Convention
+
+Both folders use sequential numbering within each date:
+
+| Folder | Example |
+| --- | --- |
+| `Executive Summaries/2026-01-10/01.md` | First summary of the day |
+| `Executive Summaries/2026-01-10/02.md` | Second summary of the day |
+| `Transcripts/2026-01-10/01.md` | First transcript of the day |
+| `Transcripts/2026-01-10/02.md` | Second transcript of the day |
+
+### Archive Format
+
+**For GitHub conversations**: Include title, URL, author, state, creation date, body, and all comments with author attribution and timestamps.
+
+**For meeting transcripts**: Preserve the full transcript text with speaker names and timestamps as provided by the source platform.
+
