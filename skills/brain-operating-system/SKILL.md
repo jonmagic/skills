@@ -45,7 +45,7 @@ All new markdown files should include YAML frontmatter:
 uid: <TID>              # Sortable timestamp ID (AT Protocol style, 13 chars)
 type: <collection>      # daily.project, weekly.note, meeting.note, project, snippet, transcript, executive.summary
 created: <ISO 8601>     # When the content was created
-tags: []                # Controlled vocabulary tags
+tags: []                # Controlled vocabulary tags (see tag-vocabulary.md at repo root)
 links:                  # Structured relationships
   parent: []
   source: []
@@ -54,6 +54,8 @@ links:                  # Structured relationships
 ```
 
 TIDs are 13-character base32-sortable identifiers encoding microseconds since Unix epoch. They give every file a stable address that survives renames and moves. Use the `frontmatter-add` skill to generate TIDs and add frontmatter to files.
+
+Tags use a controlled vocabulary defined in `tag-vocabulary.md` at the Brain repo root. Consult that file before assigning tags -- pick 1-4 of the most specific applicable tags per file.
 
 ## Operational Norms
 
