@@ -125,6 +125,43 @@ Both folders use sequential numbering within each date:
 | `Transcripts/2026-01-10/01.md` | First transcript of the day |
 | `Transcripts/2026-01-10/02.md` | Second transcript of the day |
 
+### Frontmatter
+
+All output files must include YAML frontmatter. Generate a TID for each file:
+
+```bash
+node ~/.copilot/skills/frontmatter-add/scripts/generate-tid.js
+```
+
+**Executive summary frontmatter:**
+
+```yaml
+---
+uid: <TID>
+type: executive.summary
+created: <ISO 8601>
+tags: []
+links:
+  source: [<transcript TID if archived>]
+  related: []
+---
+```
+
+**Transcript archive frontmatter:**
+
+```yaml
+---
+uid: <TID>
+type: transcript
+created: <ISO 8601>
+tags: []
+links:
+  related: []
+---
+```
+
+The `links.source` field in the executive summary connects it to the archived transcript.
+
 ### Archive Format
 
 **For GitHub conversations**: Include title, URL, author, state, creation date, body, and all comments with author attribution and timestamps.

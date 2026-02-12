@@ -82,3 +82,54 @@ cd ~/code/jonmagic/scripts && bun install
 - `references/meeting_notes_routing.yml` — manual overrides/aliases for Meeting Notes routing
 - `assets/transcript-meeting-notes.prompt.md` — prompt template for meeting notes (legacy)
 - `assets/zoom-transcript-executive-summary.prompt.md` — prompt template for executive summary (legacy)
+
+## Frontmatter
+
+All output files should include YAML frontmatter. Generate a TID for each file:
+
+```bash
+node ~/.copilot/skills/frontmatter-add/scripts/generate-tid.js
+```
+
+### Transcript files (`Transcripts/YYYY-MM-DD/NN.md`)
+
+```yaml
+---
+uid: <TID>
+type: transcript
+created: <meeting date ISO 8601>
+tags: []
+links:
+  related: []
+---
+```
+
+### Executive summary files (`Executive Summaries/YYYY-MM-DD/NN.md`)
+
+```yaml
+---
+uid: <TID>
+type: executive.summary
+created: <meeting date ISO 8601>
+tags: []
+links:
+  source: [<transcript TID>]
+  related: []
+---
+```
+
+### Meeting notes files (`Meeting Notes/<target>/YYYY-MM-DD/NN.md`)
+
+```yaml
+---
+uid: <TID>
+type: meeting.note
+created: <meeting date ISO 8601>
+tags: []
+links:
+  source: [<transcript TID>]
+  related: []
+---
+```
+
+The `links.source` field connects the executive summary and meeting notes back to the transcript they were generated from. If the CLI handles file creation, the agent should add frontmatter to any files that don't already have it.

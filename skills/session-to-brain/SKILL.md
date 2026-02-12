@@ -56,6 +56,31 @@ Run the daily project creation script:
 
 This outputs the path to the created file.
 
+### Step 3b: Add Frontmatter
+
+The `create-daily-project` script does not currently add frontmatter. After the file is created, add frontmatter to it:
+
+```bash
+node ~/.copilot/skills/frontmatter-add/scripts/add-frontmatter.js "PATH_FROM_STEP_3"
+```
+
+Or generate a TID and add it manually:
+
+```bash
+node ~/.copilot/skills/frontmatter-add/scripts/generate-tid.js
+```
+
+```yaml
+---
+uid: <TID>
+type: daily.project
+created: <today ISO 8601>
+tags: []
+links:
+  related: []
+---
+```
+
 ### Step 4: Update Weekly Note
 
 Run the weekly note update script with the path from step 3:
