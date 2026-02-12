@@ -1,47 +1,76 @@
 ---
 name: brain-operating-system
-description: Quick reference for operating within jonmagic's second-brain workspace. Use when working with files in the brain repository—provides directory structure, naming conventions, append-only norms, wikilink patterns, and file organization rules. Essential for understanding where to create files, how to name them, and how to maintain continuity with existing structures.
+description: Quick reference for operating within jonmagic's second-brain workspace. Use when working with files in the brain repository—provides directory structure, naming conventions, append-only norms, wikilink patterns, frontmatter requirements, project conventions, and file organization rules. Essential for understanding where to create files, how to name them, and how to maintain continuity with existing structures.
 ---
 
 # Brain Operating System
 
-Navigation guide for jonmagic's second-brain workspace covering directory intents, naming conventions, and operational norms.
+Navigation guide for jonmagic's second-brain workspace covering directory intents, naming conventions, operational norms, frontmatter, and project conventions.
+
+## How This Brain Works
+
+Thinking is multimodal and distributed. AI agent conversations are the primary capture mechanism -- Daily Project files are collaborative AI output, not pre-work journals. Human meetings are captured as transcripts and feed into meeting notes and executive summaries. Walk-and-talk voice memos get recorded, transcribed, and mixed with other inputs. The mixing is where insights crystallize, but thinking happens at every stage.
+
+The Brain is **bidirectionally accessed from any project**. When working in hamzo, spamurai-next, or any other repo, agents both write to the Brain and read from it. This skill is globally available for that reason.
 
 ## Directory Map
 
 | Directory | Purpose | Notes |
 |-----------|---------|-------|
-| `Daily Projects/YYYY-MM-DD/` | Day-level focus logs, scratch pads, context files | Start new execution work here. Append to existing date folders rather than creating duplicates. |
-| `Weekly Notes/YYYY-MM-DD/` | Planning, goals, schedules, backlinks to meeting notes | Anchor for weekly rituals. New headings at top (newest first). |
-| `Snippets/YYYY-MM-DD-to-YYYY-MM-DD.md` | Weekly accomplishment summaries (Ships, Collabs, Risks, etc.) | Primary feed for retros and exec updates. Maintain existing section headers. |
-| `Executive Summaries/YYYY-MM-DD/` | Distilled updates for leadership | Keep concise (1–2 pages). Reference snippets and priorities. |
-| `Meeting Notes/<team-or-person>.md` | Rolling notes with `## YYYY-MM-DD` sections | Link to transcripts/summaries via wikilinks. New dates append at top. |
-| `Projects/<slug>/` | Multi-week initiatives | Use README-like overviews, milestone logs, resource links. |
-| `Transcripts/YYYY-MM-DD/` | Archived source materials (GitHub convos, meeting transcripts) | Sequential numbering (`01.md`, `02.md`). Reference via wikilinks. |
-| `Archive/YYYY-MM-DD/` | Cold-storage for inactive artifacts | Only move files once captured elsewhere. |
+| `Daily Projects/YYYY-MM-DD/` | Day-level execution work | Numbered files (`01 topic.md`). Start new work here. |
+| `Weekly Notes/Week of YYYY-MM-DD.md` | Weekly planning, schedule, OKRs, daily logs | New entries at top (reverse-chronological). |
+| `Meeting Notes/<person-or-team>/YYYY-MM-DD/` | Per-meeting files with transcript links and action items | Numbered files per meeting per day. |
+| `Snippets/YYYY-MM-DD-to-YYYY-MM-DD.md` | Weekly accomplishment summaries (Ships, Collabs, Risks, etc.) | Friday-Thursday cycles. Primary feed for retros. |
+| `Executive Summaries/YYYY-MM-DD/` | Distilled updates for leadership | Keep concise (1-2 pages). Reference snippets and priorities. |
+| `Transcripts/YYYY-MM-DD/` | Raw meeting transcripts | Sequential numbering (`01.md`, `02.md`). Reference via wikilinks. |
+| `Projects/<slug>/` | Multi-week initiatives | Short-slug folders with `executive summary.md`, `references.md`, and artifacts. |
+| `Projections/` | Auto-generated concept summaries | Regenerated from source material. Clearly marked as generated. |
+| `Bookmarks/` | Saved external references | |
+| `Archive/YYYY-MM-DD/` | Cold storage for inactive artifacts | Only move files once captured elsewhere. |
 
 ## Naming Conventions
 
-- **Filenames**: lowercase with hyphens (`my-file-name.md`)
+- **Filenames**: lowercase with hyphens (`my-file-name.md`), except Daily Project files which use numbered prefixes (`01 topic.md`)
 - **Date folders**: `YYYY-MM-DD` format
-- **Sequential files**: When creating multiple related files in same date folder, use numeric prefixes (`01-new-angle.md`, `02-follow-up.md`)
+- **Project slugs**: short kebab-case (`nuanced-enforcement`, `proxima-abuse-prevention`)
+- **Sequential files**: Numeric prefixes within date folders (`01 topic.md`, `02 follow-up.md`)
 - **Prefer appending**: Always try to append to existing date folders rather than creating duplicates
+
+## Frontmatter
+
+All new markdown files should include YAML frontmatter:
+
+```yaml
+---
+uid: <TID>              # Sortable timestamp ID (AT Protocol style, 13 chars)
+type: <collection>      # daily.project, weekly.note, meeting.note, project, snippet, transcript, executive.summary
+created: <ISO 8601>     # When the content was created
+tags: []                # Controlled vocabulary tags
+links:                  # Structured relationships
+  parent: []
+  source: []
+  related: []
+---
+```
+
+TIDs are 13-character base32-sortable identifiers encoding microseconds since Unix epoch. They give every file a stable address that survives renames and moves. Use the `frontmatter-add` skill to generate TIDs and add frontmatter to files.
 
 ## Operational Norms
 
 ### Append-Only Discipline
 
 - **Weekly Notes, Meeting Notes**: Always append new entries at top (reverse-chronological)
-- **Daily Projects**: When asked append a running log of steps to the bottom of the existing file
+- **Daily Projects**: When asked, append a running log of steps to the bottom of the existing file
 - **Context files** (e.g., `snippets-context-*.txt`, `retro-context-*.txt`): Always append to end, never edit middle sections
 - **Snippets, Executive Summaries**: Create new files for new time periods
 
 ### Wikilink Patterns
 
-Use `[[...]]` wikilinks liberally to connect documents:
+Use `[[...]]` wikilinks to connect documents:
 - `[[Snippets/2025-11-24-to-2025-11-30]]`
-- `[[Projects/spiral-funnel-architecture/README]]`
-- `[[Meeting Notes/alice]]`
+- `[[Projects/nuanced-enforcement/executive summary]]`
+- `[[Meeting Notes/alice/2026-02-10/01]]`
+- `[[uid:TID|Display Text]]` for TID-based links
 
 ### Thread Awareness
 
@@ -56,21 +85,41 @@ Before editing any document:
 - Use wikilinks to connect related content
 - Consolidate learnings into appropriate long-term documents (Weekly Notes, Projects, etc.)
 
+## Projects
+
+Projects are multi-week efforts that accumulate artifacts. Each project folder contains:
+
+| File | Purpose | Updated by |
+|------|---------|-----------|
+| `executive summary.md` | GitHub issue link, current status, brief narrative summary | Agent (regenerated periodically) |
+| `references.md` | Links to all related Daily Projects, meetings, transcripts, PRs | Agent (auto-appended) |
+| Other `*.md` files | Artifacts: proposals, ADRs, analysis reports, interview notes | Created during work |
+
+### Project Lifecycle
+
+- **Active** -- working on this week/month
+- **Parked** -- paused but may resume; stays in `Projects/` with parked status in executive summary
+- **Completed** -- done; stays in `Projects/` briefly for reference, then archived
+- **Archived** -- moved to `Archive/YYYY-MM-DD/Projects/`
+
+## File Creation Decision Tree
+
+**Creating a new file?**
+1. Is it daily execution work? → `Daily Projects/YYYY-MM-DD/`
+2. Is it weekly planning? → `Weekly Notes/Week of YYYY-MM-DD.md`
+3. Is it accomplishment tracking? → `Snippets/YYYY-MM-DD-to-YYYY-MM-DD.md`
+4. Is it a meeting record? → `Meeting Notes/<person-or-team>/YYYY-MM-DD/` (numbered files)
+5. Is it a multi-week initiative? → `Projects/<slug>/`
+6. Is it a project artifact (proposal, ADR, analysis)? → `Projects/<slug>/`
+7. Is it a transcript? → `Transcripts/YYYY-MM-DD/`
+8. Is it a leadership summary? → `Executive Summaries/YYYY-MM-DD/`
+
+**When in doubt**: Start in `Daily Projects/YYYY-MM-DD/` and migrate later if it becomes evergreen.
+
 ## Workflow Expectations
 
 1. **Start in Daily Projects**: Kick off new work in `Daily Projects/YYYY-MM-DD/`
 2. **Propagate learnings**: Copy distilled notes into relevant Weekly Note, Snippet, or Project file
 3. **Follow breadcrumbs**: Use wikilinks to trace decision history
 4. **Version-friendly**: Use Markdown headings, tables, bullet lists; avoid inline HTML
-
-## File Creation Decision Tree
-
-**Creating a new file?**
-1. Is it daily execution work? → `Daily Projects/YYYY-MM-DD/`
-2. Is it weekly planning? → `Weekly Notes/YYYY-MM-DD/`
-3. Is it accomplishment tracking? → `Snippets/YYYY-MM-DD-to-YYYY-MM-DD.md`
-4. Is it a meeting record? → `Meeting Notes/<person-or-team>.md` (append new `## YYYY-MM-DD` section)
-5. Is it multi-week scope? → `Projects/<slug>/`
-6. Is it a transcript? → `Transcripts/YYYY-MM-DD/`
-
-**When in doubt**: Start in `Daily Projects/YYYY-MM-DD/` and migrate later if it becomes evergreen.
+5. **Cross-project access**: When working in another repo, use `project-paths` skill to resolve the Brain path
