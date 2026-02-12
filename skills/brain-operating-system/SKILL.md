@@ -125,3 +125,23 @@ Projects are multi-week efforts that accumulate artifacts. Each project folder c
 3. **Follow breadcrumbs**: Use wikilinks to trace decision history
 4. **Version-friendly**: Use Markdown headings, tables, bullet lists; avoid inline HTML
 5. **Cross-project access**: When working in another repo, use `project-paths` skill to resolve the Brain path
+
+## Brain Infrastructure
+
+The Brain has a structured index and search system. Use these tools to find and connect content:
+
+| Tool | Purpose | Command |
+|------|---------|---------|
+| `brain-search` | Build index, search by text/tag/type/timeline | `node ~/.copilot/skills/brain-search/scripts/brain-index.js ~/Brain` |
+| `brain-connections` | Find related files by tag overlap and content similarity | `node ~/.copilot/skills/brain-connections/scripts/brain-connections.js <file>` |
+| `brain-project` | Generate concept projections gathering all content on a topic | `node ~/.copilot/skills/brain-project/scripts/brain-project.js --tag <topic> ~/Brain` |
+| `brain-context` | Load relevant context at session start | See `brain-context` skill |
+
+**Before searching**, rebuild the index (takes ~2 seconds):
+
+```bash
+node ~/.copilot/skills/brain-search/scripts/brain-index.js ~/Brain
+```
+
+**Projections** live in `Projections/` and are generated artifacts. They gather all content about a topic into a single reference. Refresh with `--refresh`.
+
