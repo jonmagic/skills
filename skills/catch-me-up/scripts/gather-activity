@@ -1,0 +1,162 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Gather daily activity for a date range, organized by day.
+#
+# Usage:
+#   gather-activity --week 2026-01-04          # Sunday through Saturday
+#   gather-activity --date 2026-01-05          # Single day
+#   gather-activity --from 2026-01-05 --to 2026-01-09  # Custom range
+#   gather-activity --week 2026-01-04 --files  # Include file paths only (no content)
+#
+# Output: JSON with per-day breakdown of daily projects and meeting notes,
+# including file paths and (by default) the first ~50 lines of content.
+
+require "json"
+require "date"
+require "optparse"
+
+options = { content: true, content_lines: 50 }
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: gather-activity [options]"
+
+  opts.on("--week DATE", "Week starting on Sunday DATE (YYYY-MM-DD)") do |d|
+    options[:week] = Date.parse(d)
+  end
+
+  opts.on("--date DATE", "Single date (YYYY-MM-DD)") do |d|
+    options[:from] = Date.parse(d)
+    options[:to] = Date.parse(d)
+  end
+
+  opts.on("--from DATE", "Start date (YYYY-MM-DD)") do |d|
+    options[:from] = Date.parse(d)
+  end
+
+  opts.on("--to DATE", "End date (YYYY-MM-DD)") do |d|
+    options[:to] = Date.parse(d)
+  end
+
+  opts.on("--brain PATH", "Brain root (default: ~/Brain)") do |p|
+    options[:brain] = p
+  end
+
+  opts.on("--files", "List file paths only, skip content") do
+    options[:content] = false
+  end
+
+  opts.on("--lines N", Integer, "Max content lines per file (default: 50)") do |n|
+    options[:content_lines] = n
+  end
+
+  opts.on("-h", "--help", "Show this help") do
+    puts opts
+    exit
+  end
+end.parse!
+
+# Resolve date range
+if options[:week]
+  # Ensure it's a Sunday; if not, back up to the previous Sunday
+  week_start = options[:week]
+  week_start -= (week_start.wday) # back to Sunday
+  options[:from] = week_start
+  options[:to] = week_start + 6
+end
+
+unless options[:from] && options[:to]
+  warn "Error: specify --week, --date, or --from/--to"
+  exit 1
+end
+
+brain = File.expand_path(options[:brain] || "~/Brain")
+
+unless Dir.exist?(brain)
+  warn "Error: Brain not found at #{brain}"
+  exit 1
+end
+
+DAY_NAMES = %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday].freeze
+
+def read_preview(path, max_lines)
+  return nil unless File.exist?(path)
+
+  lines = File.readlines(path, encoding: "utf-8")
+
+  # Skip frontmatter
+  if lines.first&.strip == "---"
+    end_idx = lines[1..].index { |l| l.strip == "---" }
+    lines = lines[(end_idx + 2)..] if end_idx
+  end
+
+  lines.first(max_lines).join
+rescue => e
+  "(error reading: #{e.message})"
+end
+
+def extract_title_from_filename(filename)
+  # Remove number prefix and extension: "01 some topic.md" -> "some topic"
+  name = File.basename(filename, ".md")
+  name.sub(/^\d+[\s\-]+/, "").strip
+end
+
+results = { brain: brain, from: options[:from].to_s, to: options[:to].to_s, days: [] }
+
+(options[:from]..options[:to]).each do |date|
+  ymd = date.strftime("%Y-%m-%d")
+  day_name = DAY_NAMES[date.wday]
+
+  day = {
+    date: ymd,
+    day: day_name,
+    daily_projects: [],
+    meetings: []
+  }
+
+  # Gather daily projects
+  dp_dir = File.join(brain, "Daily Projects", ymd)
+  if Dir.exist?(dp_dir)
+    Dir.glob(File.join(dp_dir, "*.md")).sort.each do |path|
+      entry = {
+        path: path.sub("#{brain}/", ""),
+        title: extract_title_from_filename(path)
+      }
+      entry[:content] = read_preview(path, options[:content_lines]) if options[:content]
+      day[:daily_projects] << entry
+    end
+  end
+
+  # Gather meeting notes
+  meeting_base = File.join(brain, "Meeting Notes")
+  if Dir.exist?(meeting_base)
+    Dir.glob(File.join(meeting_base, "*", ymd)).sort.each do |date_dir|
+      next unless Dir.exist?(date_dir)
+
+      meeting_name = File.basename(File.dirname(date_dir))
+
+      Dir.glob(File.join(date_dir, "*.md")).sort.each do |path|
+        entry = {
+          path: path.sub("#{brain}/", ""),
+          meeting: meeting_name
+        }
+        entry[:content] = read_preview(path, options[:content_lines]) if options[:content]
+        day[:meetings] << entry
+      end
+    end
+  end
+
+  # Only include days that have activity
+  day[:daily_projects].any? || day[:meetings].any? ? results[:days] << day : nil
+end
+
+# Summary stats
+total_projects = results[:days].sum { |d| d[:daily_projects].size }
+total_meetings = results[:days].sum { |d| d[:meetings].size }
+results[:summary] = {
+  days_with_activity: results[:days].size,
+  total_daily_projects: total_projects,
+  total_meetings: total_meetings
+}
+
+puts JSON.pretty_generate(results)
