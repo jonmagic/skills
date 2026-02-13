@@ -25,7 +25,7 @@ The Brain is **bidirectionally accessed from any project**. When working in hamz
 | `Transcripts/YYYY-MM-DD/` | Raw meeting transcripts | Sequential numbering (`01.md`, `02.md`). Reference via wikilinks. |
 | `Projects/<slug>/` | Multi-week initiatives | Short-slug folders with `executive summary.md`, `references.md`, and artifacts. |
 | `Projections/` | Auto-generated concept summaries | Regenerated from source material. Clearly marked as generated. |
-| `Bookmarks/` | Saved external references | |
+| `Bookmarks/YYYY-MM-DD/` | Saved external references with frontmatter | Numbered files (`01 title.md`). One bookmark per file. |
 | `Archive/YYYY-MM-DD/` | Cold storage for inactive artifacts | Only move files once captured elsewhere. |
 
 ## Naming Conventions
@@ -43,7 +43,7 @@ All new markdown files should include YAML frontmatter:
 ```yaml
 ---
 uid: <TID>              # Sortable timestamp ID (AT Protocol style, 13 chars)
-type: <collection>      # daily.project, weekly.note, meeting.note, project, snippet, transcript, executive.summary
+type: <collection>      # daily.project, weekly.note, meeting.note, project, snippet, transcript, executive.summary, bookmark
 created: <ISO 8601>     # When the content was created
 tags: []                # Controlled vocabulary tags (see tag-vocabulary.md at repo root)
 links:                  # Structured relationships
@@ -115,6 +115,8 @@ Projects are multi-week efforts that accumulate artifacts. Each project folder c
 6. Is it a project artifact (proposal, ADR, analysis)? → `Projects/<slug>/`
 7. Is it a transcript? → `Transcripts/YYYY-MM-DD/`
 8. Is it a leadership summary? → `Executive Summaries/YYYY-MM-DD/`
+
+9. Is it an external link to save? → `Bookmarks/YYYY-MM-DD/` (numbered files)
 
 **When in doubt**: Start in `Daily Projects/YYYY-MM-DD/` and migrate later if it becomes evergreen.
 
