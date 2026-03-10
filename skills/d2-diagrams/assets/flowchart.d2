@@ -1,0 +1,16 @@
+# Simple flowchart example
+direction: down
+
+start: Start {shape: oval}
+input: Get User Input
+validate: Valid? {shape: diamond}
+process: Process Data
+error: Show Error
+output: Display Result
+end: End {shape: oval}
+
+start -> input -> validate
+validate -> process: Yes
+validate -> error: No
+error -> input
+process -> output -> end

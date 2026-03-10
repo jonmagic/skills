@@ -1,0 +1,49 @@
+# Grid diagram template
+direction: down
+
+dashboard: System Status {
+  grid-rows: 2
+  grid-columns: 3
+  grid-gap: 8
+
+  style: {
+    fill: "#fafafa"
+    border-radius: 12
+  }
+
+  api: |md
+    ## API
+    **Healthy**
+    99.9% uptime
+  | {style.border-radius: 8}
+
+  db: |md
+    ## Database
+    **Healthy**
+    45ms avg latency
+  | {style.border-radius: 8}
+
+  cache: |md
+    ## Cache
+    **Warning**
+    82% memory used
+  | {style.border-radius: 8}
+
+  queue: |md
+    ## Queue
+    **Healthy**
+    12 pending jobs
+  | {style.border-radius: 8}
+
+  storage: |md
+    ## Storage
+    **Healthy**
+    2.1 TB free
+  | {style.border-radius: 8}
+
+  cdn: |md
+    ## CDN
+    **Healthy**
+    98.5% hit rate
+  | {style.border-radius: 8}
+}
