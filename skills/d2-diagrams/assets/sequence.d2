@@ -1,0 +1,20 @@
+# Sequence diagram template
+shape: sequence_diagram
+
+client: Browser
+gateway: API Gateway
+auth: Auth Service
+api: Core API
+db: Database {
+  shape: cylinder
+}
+
+client -> gateway: POST /api/resource
+gateway -> auth: Validate JWT
+auth -> gateway: 200 OK
+
+gateway -> api: Forward request
+api -> db: INSERT INTO resources
+db -> api: Created
+api -> gateway: 201 Created
+gateway -> client: 201 Created

@@ -1,0 +1,34 @@
+# Entity-Relationship Diagram template
+direction: right
+
+users: {
+  shape: sql_table
+  id: int {constraint: primary_key}
+  username: varchar(50) {constraint: unique}
+  email: varchar(255) {constraint: unique}
+  password_hash: varchar(255)
+  created_at: timestamp
+}
+
+posts: {
+  shape: sql_table
+  id: int {constraint: primary_key}
+  author_id: int {constraint: foreign_key}
+  title: varchar(255)
+  body: text
+  status: enum
+  created_at: timestamp
+}
+
+comments: {
+  shape: sql_table
+  id: int {constraint: primary_key}
+  post_id: int {constraint: foreign_key}
+  author_id: int {constraint: foreign_key}
+  body: text
+  created_at: timestamp
+}
+
+users.id <-> posts.author_id
+users.id <-> comments.author_id
+posts.id <-> comments.post_id
