@@ -1,0 +1,102 @@
+#!/usr/bin/env bun
+
+// Create a weekly note from template with dates filled in
+// Usage: create-weekly-note [brain_path]
+//   brain_path: Optional path to brain directory (defaults to ~/Brain)
+
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { join, resolve } from 'path'
+import { homedir } from 'os'
+
+// Configuration
+const BRAIN_PATH = process.argv[2] || join(homedir(), 'Brain')
+const SKILL_PATH = resolve(join(homedir(), '.copilot', 'skills', 'brain'))
+const TEMPLATE_PATH = join(SKILL_PATH, 'assets', 'weekly-note-template.md')
+const WEEKLY_NOTES_PATH = join(BRAIN_PATH, 'Weekly Notes')
+
+type DayName = 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday'
+
+// Calculate target week dates (Sunday through Saturday)
+// After Thursday (day >= 5), create next week's note
+function targetWeekDates(): Record<DayName, Date> {
+  const today = new Date()
+  const dayOfWeek = today.getDay() // 0 = Sunday
+
+  // Find this week's Sunday
+  const sunday = new Date(today)
+  sunday.setDate(today.getDate() - dayOfWeek)
+
+  // If Friday (5) or Saturday (6), target next week
+  if (dayOfWeek >= 5) {
+    sunday.setDate(sunday.getDate() + 7)
+  }
+
+  const days: DayName[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+  const dates = {} as Record<DayName, Date>
+
+  for (let i = 0; i < days.length; i++) {
+    const date = new Date(sunday)
+    date.setDate(sunday.getDate() + i)
+    dates[days[i]] = date
+  }
+
+  return dates
+}
+
+// Format date as YYYY-MM-DD
+function formatDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// Fill in template placeholders with actual dates
+function fillTemplate(template: string, dates: Record<DayName, Date>): string {
+  let content = template
+
+  for (const [day, date] of Object.entries(dates)) {
+    const placeholder = `{{${day}:YYYY-MM-DD}}`
+    content = content.replaceAll(placeholder, formatDate(date))
+  }
+
+  return content
+}
+
+// Main execution
+function main() {
+  const dates = targetWeekDates()
+  const sundayDate = formatDate(dates.sunday)
+
+  // Ensure Weekly Notes directory exists
+  if (!existsSync(WEEKLY_NOTES_PATH)) {
+    mkdirSync(WEEKLY_NOTES_PATH, { recursive: true })
+  }
+
+  // Check if file already exists
+  const filename = `Week of ${sundayDate}.md`
+  const filepath = join(WEEKLY_NOTES_PATH, filename)
+
+  if (existsSync(filepath)) {
+    console.log(`Weekly note already exists: ${filename}`)
+    console.log(filepath)
+    process.exit(0)
+  }
+
+  // Read template
+  if (!existsSync(TEMPLATE_PATH)) {
+    console.log(`Error: Template not found at ${TEMPLATE_PATH}`)
+    process.exit(1)
+  }
+
+  const template = readFileSync(TEMPLATE_PATH, 'utf-8')
+
+  // Fill in dates and write file
+  const content = fillTemplate(template, dates)
+  writeFileSync(filepath, content)
+
+  console.log(`Created weekly note: ${filename}`)
+  console.log(filepath)
+}
+
+main()

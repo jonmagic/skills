@@ -1,0 +1,400 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Gather daily activity for a date range, organized by day.
+#
+# Usage:
+#   gather-activity --week 2026-01-04          # Sunday through Saturday
+#   gather-activity --date 2026-01-05          # Single day
+#   gather-activity --from 2026-01-05 --to 2026-01-09  # Custom range
+#   gather-activity --week 2026-01-04 --files  # Include file paths only (no content)
+#   gather-activity --week 2026-01-04 --no-github  # Skip GitHub API queries
+#   gather-activity --week 2026-01-04 --github-user octocat  # Override GitHub user
+#
+# Output: JSON with per-day breakdown of daily projects, meeting notes, and
+# GitHub activity (issues and PRs), including file paths and (by default) the
+# first ~50 lines of content.
+
+require "json"
+require "date"
+require "optparse"
+require "open3"
+
+options = { content: true, content_lines: 50, github: true, github_user: nil }
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: gather-activity [options]"
+
+  opts.on("--week DATE", "Week starting on Sunday DATE (YYYY-MM-DD)") do |d|
+    options[:week] = Date.parse(d)
+  end
+
+  opts.on("--date DATE", "Single date (YYYY-MM-DD)") do |d|
+    options[:from] = Date.parse(d)
+    options[:to] = Date.parse(d)
+  end
+
+  opts.on("--from DATE", "Start date (YYYY-MM-DD)") do |d|
+    options[:from] = Date.parse(d)
+  end
+
+  opts.on("--to DATE", "End date (YYYY-MM-DD)") do |d|
+    options[:to] = Date.parse(d)
+  end
+
+  opts.on("--brain PATH", "Brain root (default: ~/Brain)") do |p|
+    options[:brain] = p
+  end
+
+  opts.on("--files", "List file paths only, skip content") do
+    options[:content] = false
+  end
+
+  opts.on("--lines N", Integer, "Max content lines per file (default: 50)") do |n|
+    options[:content_lines] = n
+  end
+
+  opts.on("--no-github", "Skip GitHub API queries") do
+    options[:github] = false
+  end
+
+  opts.on("--github-user USER", "GitHub username (default: auto-detect via gh)") do |u|
+    options[:github_user] = u
+  end
+
+  opts.on("-h", "--help", "Show this help") do
+    puts opts
+    exit
+  end
+end.parse!
+
+# Resolve date range
+if options[:week]
+  # Ensure it's a Sunday; if not, back up to the previous Sunday
+  week_start = options[:week]
+  week_start -= (week_start.wday) # back to Sunday
+  options[:from] = week_start
+  options[:to] = week_start + 6
+end
+
+unless options[:from] && options[:to]
+  warn "Error: specify --week, --date, or --from/--to"
+  exit 1
+end
+
+brain = File.expand_path(options[:brain] || "~/Brain")
+
+unless Dir.exist?(brain)
+  warn "Error: Brain not found at #{brain}"
+  exit 1
+end
+
+DAY_NAMES = %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday].freeze
+
+def read_preview(path, max_lines)
+  return nil unless File.exist?(path)
+
+  lines = File.readlines(path, encoding: "utf-8")
+
+  # Skip frontmatter
+  if lines.first&.strip == "---"
+    end_idx = lines[1..].index { |l| l.strip == "---" }
+    lines = lines[(end_idx + 2)..] if end_idx
+  end
+
+  lines.first(max_lines).join
+rescue => e
+  "(error reading: #{e.message})"
+end
+
+def extract_title_from_filename(filename)
+  # Remove number prefix and extension: "01 some topic.md" -> "some topic"
+  name = File.basename(filename, ".md")
+  name.sub(/^\d+[\s\-]+/, "").strip
+end
+
+def date_portion(timestamp)
+  return nil if timestamp.nil? || timestamp.empty?
+
+  timestamp[0, 10]
+end
+
+def build_github_entry(item, item_date, search_key, roles)
+  created_on_day = date_portion(item["created_at"]) == item_date
+  merged_on_day = search_key == :pull_requests && date_portion(item["merged_at"]) == item_date
+
+  activity_kind =
+    if search_key == :issues
+      created_on_day ? "opened" : "updated_existing"
+    elsif created_on_day && merged_on_day
+      "opened_and_merged"
+    elsif merged_on_day
+      "merged"
+    elsif created_on_day
+      "opened"
+    else
+      "updated_existing"
+    end
+
+  entry = {
+    repo: item["repo"],
+    number: item["number"],
+    title: item["title"],
+    state: item["state"],
+    url: item["html_url"],
+    roles: roles,
+    created_at: item["created_at"],
+    updated_at: item["updated_at"],
+    activity_kind: activity_kind,
+    created_on_day: created_on_day,
+    summary_safe: activity_kind != "updated_existing"
+  }
+
+  if search_key == :pull_requests
+    entry[:merged] = !item["merged_at"].nil? && !item["merged_at"].empty? rescue false
+    entry[:merged_at] = item["merged_at"]
+    entry[:merged_on_day] = merged_on_day
+  end
+
+  entry
+end
+
+# Run a single GitHub search query and return parsed items.
+# Returns an array of parsed JSON objects.
+def gh_search(query, jq_filter, per_page: 100)
+  all_items = []
+  page = 1
+
+  loop do
+    cmd = [
+      "gh", "api", "search/issues",
+      "--method", "GET",
+      "-f", "q=#{query}",
+      "-f", "per_page=#{per_page}",
+      "-f", "page=#{page}",
+      "--jq", "[#{jq_filter}]"
+    ]
+
+    stdout, stderr, status = Open3.capture3(*cmd)
+
+    unless status.success?
+      warn "Warning: GitHub API query failed: #{stderr.strip}"
+      break
+    end
+
+    items = JSON.parse(stdout) rescue []
+    break if items.empty?
+
+    all_items.concat(items)
+
+    # GitHub search API returns max 1000 results; paginate if needed
+    break if items.size < per_page
+    page += 1
+  end
+
+  all_items
+end
+
+# Build a Set of "repo#number" keys from a search query for fast role lookups.
+def build_role_set(github_user, qualifier, date_query, type)
+  jq_filter = '.items[] | {repo: (.repository_url | split("/") | .[-2:] | join("/")), number: .number}'
+  query = "#{qualifier}:#{github_user} #{date_query} is:#{type}"
+  items = gh_search(query, jq_filter)
+  items.map { |i| "#{i["repo"]}##{i["number"]}" }.to_set
+end
+
+# Fetch GitHub activity for the date range using the gh CLI.
+# Returns a hash of date_string => { issues: [...], pull_requests: [...],
+#                                    context_only_issues: [...], context_only_pull_requests: [...] }
+#
+# Strategy:
+#   1. Use "involves:" to find all items the user touched (single query per type)
+#   2. Run "author:", "commenter:", "reviewed-by:" queries to build role lookup sets
+#   3. Tag each item with its roles and classify whether it is safe to summarize
+#      deterministically for the target day. Older items that merely matched
+#      because of historical roles are kept in context-only buckets.
+def fetch_github_activity(github_user, from_date, to_date)
+  require "set"
+
+  activity_by_date = Hash.new do |h, k|
+    h[k] = {
+      issues: [],
+      pull_requests: [],
+      context_only_issues: [],
+      context_only_pull_requests: []
+    }
+  end
+
+  # Build date range query
+  if from_date == to_date
+    date_query = "updated:#{from_date}"
+    merged_date_query = "merged:#{from_date}"
+  else
+    date_query = "updated:#{from_date}..#{to_date}"
+    merged_date_query = "merged:#{from_date}..#{to_date}"
+  end
+
+  # Step 1: Build role lookup sets for each type.
+  # Each set contains "repo#number" strings for fast membership checks.
+  role_sets = {}
+
+  # Issue roles: author, commenter, assignee
+  role_sets[:issue] = {
+    authored:  build_role_set(github_user, "author", date_query, "issue"),
+    commented: build_role_set(github_user, "commenter", date_query, "issue"),
+    assigned:  build_role_set(github_user, "assignee", date_query, "issue")
+  }
+
+  # PR roles: author, commenter, reviewed, assignee
+  role_sets[:pr] = {
+    authored:  build_role_set(github_user, "author", date_query, "pr"),
+    commented: build_role_set(github_user, "commenter", date_query, "pr"),
+    reviewed:  build_role_set(github_user, "reviewed-by", date_query, "pr"),
+    assigned:  build_role_set(github_user, "assignee", date_query, "pr")
+  }
+
+  # Step 2: Fetch all items via "involves:" and tag with roles
+  full_jq = '.items[] | {repo: (.repository_url | split("/") | .[-2:] | join("/")), number: .number, title: .title, state: .state, updated_at: .updated_at, created_at: .created_at, html_url: .html_url, merged_at: .pull_request.merged_at}'
+
+  [
+    { type: "issue", key: :issues, context_key: :context_only_issues, role_key: :issue },
+    { type: "pr", key: :pull_requests, context_key: :context_only_pull_requests, role_key: :pr }
+  ].each do |search|
+    query = "involves:#{github_user} #{date_query} is:#{search[:type]}"
+    items = gh_search(query, full_jq)
+
+    items.each do |item|
+      # Bucket by the updated_at date
+      item_date = item["updated_at"]&.slice(0, 10)
+      next unless item_date
+
+      # Only include if the date falls within our range
+      d = Date.parse(item_date) rescue nil
+      next unless d && d >= from_date && d <= to_date
+
+      item_key = "#{item["repo"]}##{item["number"]}"
+
+      # Determine roles
+      roles = []
+      role_sets[search[:role_key]].each do |role_name, role_set|
+        roles << role_name.to_s if role_set.include?(item_key)
+      end
+      # If no specific role matched (e.g., just mentioned), mark as "mentioned"
+      roles << "mentioned" if roles.empty?
+
+      entry = build_github_entry(item, item_date, search[:key], roles)
+      bucket = entry[:summary_safe] ? search[:key] : search[:context_key]
+      activity_by_date[item_date][bucket] << entry
+    end
+  end
+
+  # Deduplicate within each day/type by number+repo
+  activity_by_date.each do |date, activity|
+    activity[:issues].uniq! { |i| [i[:repo], i[:number]] }
+    activity[:pull_requests].uniq! { |pr| [pr[:repo], pr[:number]] }
+    activity[:context_only_issues].uniq! { |i| [i[:repo], i[:number]] }
+    activity[:context_only_pull_requests].uniq! { |pr| [pr[:repo], pr[:number]] }
+  end
+
+  activity_by_date
+end
+
+# Resolve GitHub username if needed
+github_activity_by_date = {}
+if options[:github]
+  github_user = options[:github_user]
+  unless github_user
+    stdout, stderr, status = Open3.capture3("gh", "api", "user", "--jq", ".login")
+    if status.success?
+      github_user = stdout.strip
+    else
+      warn "Warning: Could not detect GitHub user (#{stderr.strip}). Skipping GitHub activity."
+      options[:github] = false
+    end
+  end
+
+  if options[:github] && github_user
+    github_activity_by_date = fetch_github_activity(github_user, options[:from], options[:to])
+  end
+end
+
+results = { brain: brain, from: options[:from].to_s, to: options[:to].to_s, days: [] }
+
+(options[:from]..options[:to]).each do |date|
+  ymd = date.strftime("%Y-%m-%d")
+  day_name = DAY_NAMES[date.wday]
+
+  day = {
+    date: ymd,
+    day: day_name,
+    daily_projects: [],
+    meetings: [],
+    github_activity: {
+      issues: [],
+      pull_requests: [],
+      context_only_issues: [],
+      context_only_pull_requests: []
+    }
+  }
+
+  # Gather daily projects
+  dp_dir = File.join(brain, "Daily Projects", ymd)
+  if Dir.exist?(dp_dir)
+    Dir.glob(File.join(dp_dir, "*.md")).sort.each do |path|
+      entry = {
+        path: path.sub("#{brain}/", ""),
+        title: extract_title_from_filename(path)
+      }
+      entry[:content] = read_preview(path, options[:content_lines]) if options[:content]
+      day[:daily_projects] << entry
+    end
+  end
+
+  # Gather meeting notes
+  meeting_base = File.join(brain, "Meeting Notes")
+  if Dir.exist?(meeting_base)
+    Dir.glob(File.join(meeting_base, "*", ymd)).sort.each do |date_dir|
+      next unless Dir.exist?(date_dir)
+
+      meeting_name = File.basename(File.dirname(date_dir))
+
+      Dir.glob(File.join(date_dir, "*.md")).sort.each do |path|
+        entry = {
+          path: path.sub("#{brain}/", ""),
+          meeting: meeting_name
+        }
+        entry[:content] = read_preview(path, options[:content_lines]) if options[:content]
+        day[:meetings] << entry
+      end
+    end
+  end
+
+  # Gather GitHub activity for this day
+  if github_activity_by_date.key?(ymd)
+    day[:github_activity] = github_activity_by_date[ymd]
+  end
+
+  # Only include days that have activity
+  has_activity = day[:daily_projects].any? || day[:meetings].any? ||
+    day[:github_activity][:issues].any? || day[:github_activity][:pull_requests].any?
+  results[:days] << day if has_activity
+end
+
+# Summary stats
+total_projects = results[:days].sum { |d| d[:daily_projects].size }
+total_meetings = results[:days].sum { |d| d[:meetings].size }
+total_issues = results[:days].sum { |d| d[:github_activity][:issues].size }
+total_prs = results[:days].sum { |d| d[:github_activity][:pull_requests].size }
+total_context_issues = results[:days].sum { |d| d[:github_activity][:context_only_issues].size }
+total_context_prs = results[:days].sum { |d| d[:github_activity][:context_only_pull_requests].size }
+results[:summary] = {
+  days_with_activity: results[:days].size,
+  total_daily_projects: total_projects,
+  total_meetings: total_meetings,
+  total_github_issues: total_issues,
+  total_github_pull_requests: total_prs,
+  total_github_context_issues: total_context_issues,
+  total_github_context_pull_requests: total_context_prs
+}
+
+puts JSON.pretty_generate(results)
