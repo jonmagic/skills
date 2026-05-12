@@ -12,6 +12,9 @@
 #   ruby generate-tid.rb
 #   ruby generate-tid.rb --timestamp "2026-01-24T00:00:00Z"
 
+require 'set'
+require 'time'
+
 # Base32-sortable alphabet (same as AT Protocol)
 # Chosen so alphabetic sort = numeric sort
 BASE32_SORTABLE = '234567abcdefghijklmnopqrstuvwxyz'
@@ -26,18 +29,30 @@ def encode_base32_sortable(value, length)
   result
 end
 
-def generate_tid(timestamp = nil)
-  ts = if timestamp
-         Time.parse(timestamp)
-       else
-         Time.now
-       end
+def parse_tid_timestamp(timestamp)
+  return Time.now unless timestamp
+  return timestamp if timestamp.is_a?(Time)
+
+  Time.parse(timestamp.to_s)
+end
+
+def clock_id_for_seed(seed)
+  hash = 0x811c9dc5
+  seed.to_s.each_codepoint do |codepoint|
+    hash ^= codepoint
+    hash = (hash * 0x01000193) & 0xffffffff
+  end
+  hash & 0x3ff
+end
+
+def generate_tid(timestamp = nil, clock_id = nil)
+  ts = parse_tid_timestamp(timestamp)
 
   # Microseconds since Unix epoch (53 bits max)
   micros = (ts.to_f * 1_000_000).floor
 
   # Clock ID: random 10-bit value for collision avoidance
-  clock_id = rand(1024)
+  clock_id ||= rand(1024)
 
   # Encode timestamp (11 chars = 55 bits, we use 53)
   timestamp_encoded = encode_base32_sortable(micros, 11)
@@ -48,10 +63,25 @@ def generate_tid(timestamp = nil)
   timestamp_encoded + clock_encoded
 end
 
+def generate_unique_tid(existing_uids, timestamp = nil, seed = nil)
+  existing = existing_uids.is_a?(Set) ? existing_uids : existing_uids.to_set
+  base_time = parse_tid_timestamp(timestamp)
+  initial_clock_id = seed && !seed.to_s.empty? ? clock_id_for_seed(seed) : rand(1024)
+  attempt = 0
+
+  loop do
+    timestamp_offset_ms = attempt / 1024
+    candidate_time = base_time + Rational(timestamp_offset_ms, 1000)
+    clock_id = (initial_clock_id + attempt) % 1024
+    candidate = generate_tid(candidate_time, clock_id)
+    return candidate unless existing.include?(candidate)
+
+    attempt += 1
+  end
+end
+
 # CLI interface
 if __FILE__ == $0
-  require 'time'
-
   if ARGV.include?('--help') || ARGV.include?('-h')
     puts <<~HELP
       Usage: generate-tid.rb [OPTIONS]

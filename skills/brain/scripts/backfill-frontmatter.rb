@@ -74,6 +74,7 @@ def main
   added = 0
   skipped = 0
   errors = 0
+  existing_uids = collect_existing_uids(brain_dir)
 
   files.each do |file_path|
     content = File.read(file_path)
@@ -83,7 +84,15 @@ def main
       next
     end
 
-    success = add_frontmatter(file_path, { dry_run: dry_run, verbose: verbose })
+    success = add_frontmatter(
+      file_path,
+      {
+        dry_run: dry_run,
+        verbose: verbose,
+        brain_dir: brain_dir,
+        existing_uids: existing_uids
+      }
+    )
     if success
       added += 1
       if !dry_run && !verbose

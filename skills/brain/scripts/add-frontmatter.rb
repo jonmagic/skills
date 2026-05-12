@@ -58,6 +58,49 @@ def has_frontmatter?(content)
   content.start_with?("---\n")
 end
 
+def default_brain_dir_for(file_path)
+  expanded_path = File.expand_path(file_path)
+  default_brain_dir = File.expand_path('~/Brain')
+  return default_brain_dir if expanded_path.start_with?("#{default_brain_dir}/")
+
+  File.dirname(expanded_path)
+end
+
+def uid_seed_for(file_path, brain_dir)
+  expanded_path = File.expand_path(file_path)
+  expanded_brain_dir = File.expand_path(brain_dir)
+  return expanded_path.delete_prefix("#{expanded_brain_dir}/") if expanded_path.start_with?("#{expanded_brain_dir}/")
+
+  expanded_path
+end
+
+def collect_existing_uids(brain_dir)
+  existing_uids = Set.new
+  return existing_uids unless Dir.exist?(brain_dir)
+
+  walk = lambda do |current_dir|
+    Dir.children(current_dir).sort.each do |name|
+      next if name.start_with?('.')
+
+      full_path = File.join(current_dir, name)
+      if File.directory?(full_path)
+        walk.call(full_path)
+        next
+      end
+
+      next unless File.file?(full_path) && name.end_with?('.md')
+
+      content = File.read(full_path, encoding: 'UTF-8', invalid: :replace, undef: :replace)
+      existing, = parse_existing_frontmatter(content)
+      uid = existing&.fetch('uid', nil)
+      existing_uids.add(uid) if uid && !uid.empty?
+    end
+  end
+
+  walk.call(brain_dir)
+  existing_uids
+end
+
 def parse_existing_frontmatter(content)
   return [nil, content] unless has_frontmatter?(content)
 
@@ -98,9 +141,17 @@ end
 def build_frontmatter(file_path, options = {})
   type = options[:type] || detect_collection_type(file_path)
   created = options[:created] || detect_created_date(file_path)
+  brain_dir = options[:brain_dir] || default_brain_dir_for(file_path)
+  existing_uids = options[:existing_uids] || collect_existing_uids(brain_dir)
+  uid = generate_unique_tid(
+    existing_uids,
+    created.iso8601,
+    uid_seed_for(file_path, brain_dir)
+  )
+  existing_uids.add(uid) if existing_uids.respond_to?(:add)
 
   {
-    'uid' => generate_tid(created.iso8601),
+    'uid' => uid,
     'type' => type,
     'created' => created.utc.iso8601(3)
   }
