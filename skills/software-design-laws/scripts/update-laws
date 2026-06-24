@@ -1,0 +1,169 @@
+#!/usr/bin/env ruby
+
+# Fetch and normalize the Laws of Software Engineering API catalog.
+# Usage: scripts/update-laws [--source URL] [--output PATH] [--dry-run]
+
+require "fileutils"
+require "json"
+require "net/http"
+require "time"
+require "uri"
+
+DEFAULT_SOURCE = "https://lawsofsoftwareengineering.com/api.json"
+EXPECTED_AUTHOR = "Dr. Milan Milanović"
+EXPECTED_HOST = "lawsofsoftwareengineering.com"
+KNOWN_COUNT = 56
+MAX_COUNT_DELTA = (KNOWN_COUNT * 0.10).ceil
+CATALOG_SCHEMA_VERSION = 1
+
+def usage
+  <<~USAGE
+    Usage: scripts/update-laws [--source URL] [--output PATH] [--dry-run]
+
+    Fetches https://lawsofsoftwareengineering.com/api.json, validates it, and writes
+    references/laws-catalog.json with structural metadata only.
+  USAGE
+end
+
+def abort_with(message)
+  warn "Error: #{message}"
+  exit 1
+end
+
+source = DEFAULT_SOURCE
+skill_root = File.expand_path("..", __dir__)
+output = File.join(skill_root, "references", "laws-catalog.json")
+dry_run = false
+
+args = ARGV.dup
+until args.empty?
+  arg = args.shift
+  case arg
+  when "--source"
+    source = args.shift || abort_with("--source requires a URL")
+  when "--output"
+    output = args.shift || abort_with("--output requires a path")
+  when "--dry-run"
+    dry_run = true
+  when "-h", "--help"
+    puts usage
+    exit 0
+  else
+    abort_with("unknown argument #{arg.inspect}\n\n#{usage}")
+  end
+end
+
+uri = URI.parse(source)
+abort_with("source must be HTTPS") unless uri.is_a?(URI::HTTPS)
+abort_with("unexpected source host #{uri.host.inspect}") unless uri.host == EXPECTED_HOST
+
+response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 10, read_timeout: 20) do |http|
+  request = Net::HTTP::Get.new(uri.request_uri)
+  request["User-Agent"] = "software-design-laws-skill/1.0"
+  http.request(request)
+end
+
+abort_with("source returned HTTP #{response.code}") unless response.is_a?(Net::HTTPSuccess)
+
+begin
+  data = JSON.parse(response.body)
+rescue JSON::ParserError => e
+  abort_with("source returned invalid JSON: #{e.message}")
+end
+
+errors = []
+errors << "top-level JSON must be an object" unless data.is_a?(Hash)
+
+if data.is_a?(Hash)
+  errors << "author must be #{EXPECTED_AUTHOR.inspect}" unless data["author"] == EXPECTED_AUTHOR
+  errors << "generated must be present" unless data["generated"].is_a?(String) && !data["generated"].empty?
+  errors << "count must be an integer" unless data["count"].is_a?(Integer)
+  errors << "laws must be an array" unless data["laws"].is_a?(Array)
+end
+
+abort_with(errors.join("; ")) unless errors.empty?
+
+laws = data["laws"]
+count = data["count"]
+errors << "count #{count} does not match laws length #{laws.length}" unless count == laws.length
+
+if (count - KNOWN_COUNT).abs > MAX_COUNT_DELTA
+  errors << "count changed from #{KNOWN_COUNT} to #{count}, which exceeds the allowed delta of #{MAX_COUNT_DELTA}"
+end
+
+normalized = laws.map.with_index do |law, index|
+  unless law.is_a?(Hash)
+    errors << "law at index #{index} must be an object"
+    next
+  end
+
+  slug = law["slug"]
+  title = law["title"]
+  group = law["group"]
+  experience = law["experience"]
+  url = law["url"]
+  related = law["related"]
+
+  errors << "law at index #{index} missing slug" unless slug.is_a?(String) && slug.match?(/\A[a-z0-9]+(?:-[a-z0-9]+)*\z/)
+  errors << "law #{slug || index} missing title" unless title.is_a?(String) && !title.empty?
+  errors << "law #{slug || index} missing group" unless group.is_a?(String) && !group.empty?
+  errors << "law #{slug || index} missing experience" unless experience.is_a?(String) && !experience.empty?
+  errors << "law #{slug || index} missing related array" unless related.is_a?(Array)
+
+  begin
+    law_uri = URI.parse(url.to_s)
+    unless law_uri.is_a?(URI::HTTPS) && law_uri.host == EXPECTED_HOST && law_uri.path.start_with?("/laws/")
+      errors << "law #{slug || index} has unexpected URL #{url.inspect}"
+    end
+  rescue URI::InvalidURIError
+    errors << "law #{slug || index} has invalid URL #{url.inspect}"
+  end
+
+  next if [slug, title, group, experience, url, related].any?(&:nil?)
+
+  {
+    "slug" => slug,
+    "title" => title,
+    "group" => group,
+    "experience" => experience,
+    "url" => url,
+    "related" => related
+  }
+end.compact
+
+slugs = normalized.map { |law| law["slug"] }
+duplicate_slugs = slugs.tally.select { |_slug, occurrences| occurrences > 1 }.keys
+errors << "duplicate slugs: #{duplicate_slugs.join(", ")}" unless duplicate_slugs.empty?
+
+related_slugs = normalized.flat_map { |law| law["related"] }
+unknown_related = related_slugs.uniq - slugs
+errors << "related slugs missing from catalog: #{unknown_related.join(", ")}" unless unknown_related.empty?
+
+abort_with(errors.join("; ")) unless errors.empty?
+
+catalog = {
+  "catalog_schema_version" => CATALOG_SCHEMA_VERSION,
+  "source" => {
+    "title" => "Laws of Software Engineering",
+    "url" => "https://lawsofsoftwareengineering.com/",
+    "api_url" => source,
+    "author" => data["author"],
+    "generated_at" => data["generated"],
+    "retrieved_at" => Time.now.utc.iso8601,
+    "count" => normalized.length,
+    "note" => "Structural metadata only. Source prose, examples, overviews, takeaways, origins, and book-only content are intentionally not mirrored."
+  },
+  "laws" => normalized.sort_by { |law| law["slug"] }
+}
+
+json = JSON.pretty_generate(catalog) + "\n"
+
+if dry_run
+  puts json
+else
+  FileUtils.mkdir_p(File.dirname(output))
+  tmp_path = "#{output}.tmp.#{$PROCESS_ID}"
+  File.write(tmp_path, json, mode: "w:UTF-8")
+  File.rename(tmp_path, output)
+  puts "Wrote #{output} with #{normalized.length} laws."
+end
