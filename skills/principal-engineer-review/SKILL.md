@@ -183,7 +183,6 @@ Return the smallest useful artifact for the request. It must include:
 - The frontmatter description must remain scoped to this skill and not trigger on near-miss tasks.
 - Required inputs must be explicit before running tools or writing files.
 - Generated files or final outputs must match the conventions that apply to the target repository, service, document, or artifact type.
-- Evals in `evals/evals.json` and `evals/trigger-queries.json` should be updated when new edge cases appear.
 - If validation cannot run, say so directly and do not claim the side effect is complete.
 
 ## Tool and Action Safety
@@ -208,7 +207,3 @@ Should trigger:
 Should not trigger:
 
 - "format this file and fix trivial style nits"
-
-## Evaluation Plan
-
-Use `evals/evals.json` for task-quality checks and `evals/trigger-queries.json` for activation checks. Compare outputs with and without this skill; the skill should improve trigger precision, context loading, output structure, validation, and safety boundaries for principal-engineer code review focused on correctness, security, data integrity, operational risk, and MVP scope.
