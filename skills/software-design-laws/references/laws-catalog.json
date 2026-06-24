@@ -1,0 +1,666 @@
+{
+  "catalog_schema_version": 1,
+  "source": {
+    "title": "Laws of Software Engineering",
+    "url": "https://lawsofsoftwareengineering.com/",
+    "api_url": "https://lawsofsoftwareengineering.com/api.json",
+    "author": "Dr. Milan Milanović",
+    "generated_at": "2026-05-21T09:57:28Z",
+    "retrieved_at": "2026-05-24T16:46:47Z",
+    "count": 56,
+    "note": "Structural metadata only. Source prose, examples, overviews, takeaways, origins, and book-only content are intentionally not mirrored."
+  },
+  "laws": [
+    {
+      "slug": "amdahls-law",
+      "title": "Amdahl's Law",
+      "group": "Scale",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/amdahls-law/",
+      "related": [
+        "gustafsons-law",
+        "metcalfes-law"
+      ]
+    },
+    {
+      "slug": "boy-scout-rule",
+      "title": "The Boy Scout Rule",
+      "group": "Quality",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/boy-scout-rule/",
+      "related": [
+        "broken-windows-theory",
+        "yagni",
+        "technical-debt"
+      ]
+    },
+    {
+      "slug": "broken-windows-theory",
+      "title": "Broken Windows Theory",
+      "group": "Quality",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/broken-windows-theory/",
+      "related": [
+        "technical-debt",
+        "boy-scout-rule",
+        "galls-law"
+      ]
+    },
+    {
+      "slug": "brooks-law",
+      "title": "Brooks's Law",
+      "group": "Teams",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/brooks-law/",
+      "related": [
+        "conways-law",
+        "second-system-effect",
+        "law-of-unintended-consequences"
+      ]
+    },
+    {
+      "slug": "bus-factor",
+      "title": "Bus Factor",
+      "group": "Teams",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/bus-factor/",
+      "related": [
+        "conways-law",
+        "brooks-law",
+        "dunbars-number"
+      ]
+    },
+    {
+      "slug": "cap-theorem",
+      "title": "CAP Theorem",
+      "group": "Architecture",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/cap-theorem/",
+      "related": [
+        "fallacies-of-distributed-computing"
+      ]
+    },
+    {
+      "slug": "confirmation-bias",
+      "title": "Confirmation Bias",
+      "group": "Decisions",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/confirmation-bias/",
+      "related": [
+        "dunning-kruger-effect",
+        "hanlons-razor",
+        "goodharts-law"
+      ]
+    },
+    {
+      "slug": "conways-law",
+      "title": "Conway's Law",
+      "group": "Teams",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/conways-law/",
+      "related": [
+        "brooks-law",
+        "galls-law",
+        "law-of-leaky-abstractions",
+        "hyrums-law"
+      ]
+    },
+    {
+      "slug": "cunninghams-law",
+      "title": "Cunningham's Law",
+      "group": "Decisions",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/cunninghams-law/",
+      "related": [
+        "linuss-law",
+        "broken-windows-theory"
+      ]
+    },
+    {
+      "slug": "dilbert-principle",
+      "title": "Dilbert Principle",
+      "group": "Teams",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/dilbert-principle/",
+      "related": [
+        "peter-principle",
+        "putts-law",
+        "brooks-law"
+      ]
+    },
+    {
+      "slug": "dry-principle",
+      "title": "DRY (Don't Repeat Yourself)",
+      "group": "Design",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/dry-principle/",
+      "related": [
+        "solid-principles",
+        "law-of-demeter"
+      ]
+    },
+    {
+      "slug": "dunbars-number",
+      "title": "Dunbar's Number",
+      "group": "Teams",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/dunbars-number/",
+      "related": [
+        "conways-law",
+        "brooks-law"
+      ]
+    },
+    {
+      "slug": "dunning-kruger-effect",
+      "title": "Dunning-Kruger Effect",
+      "group": "Decisions",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/dunning-kruger-effect/",
+      "related": [
+        "brooks-law",
+        "hanlons-razor"
+      ]
+    },
+    {
+      "slug": "fallacies-of-distributed-computing",
+      "title": "Fallacies of Distributed Computing",
+      "group": "Architecture",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/fallacies-of-distributed-computing/",
+      "related": [
+        "cap-theorem",
+        "murphys-law"
+      ]
+    },
+    {
+      "slug": "first-principles-thinking",
+      "title": "First Principles Thinking",
+      "group": "Decisions",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/first-principles-thinking/",
+      "related": [
+        "occams-razor",
+        "kiss-principle",
+        "galls-law"
+      ]
+    },
+    {
+      "slug": "galls-law",
+      "title": "Gall's Law",
+      "group": "Architecture",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/galls-law/",
+      "related": [
+        "conways-law",
+        "brooks-law",
+        "law-of-leaky-abstractions",
+        "hofstadters-law"
+      ]
+    },
+    {
+      "slug": "gilbs-law",
+      "title": "Gilb's Law",
+      "group": "Planning",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/gilbs-law/",
+      "related": [
+        "goodharts-law",
+        "parkinsons-law"
+      ]
+    },
+    {
+      "slug": "goodharts-law",
+      "title": "Goodhart's Law",
+      "group": "Planning",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/goodharts-law/",
+      "related": [
+        "dilbert-principle",
+        "parkinsons-law"
+      ]
+    },
+    {
+      "slug": "gustafsons-law",
+      "title": "Gustafson's Law",
+      "group": "Scale",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/gustafsons-law/",
+      "related": [
+        "amdahls-law",
+        "metcalfes-law"
+      ]
+    },
+    {
+      "slug": "hanlons-razor",
+      "title": "Hanlon's Razor",
+      "group": "Decisions",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/hanlons-razor/",
+      "related": [
+        "occams-razor",
+        "goodharts-law",
+        "postels-law"
+      ]
+    },
+    {
+      "slug": "hofstadters-law",
+      "title": "Hofstadter's Law",
+      "group": "Planning",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/hofstadters-law/",
+      "related": [
+        "parkinsons-law"
+      ]
+    },
+    {
+      "slug": "hype-cycle-amaras-law",
+      "title": "The Hype Cycle & Amara's Law",
+      "group": "Decisions",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/hype-cycle-amaras-law/",
+      "related": [
+        "goodharts-law",
+        "galls-law",
+        "second-system-effect"
+      ]
+    },
+    {
+      "slug": "hyrums-law",
+      "title": "Hyrum's Law",
+      "group": "Architecture",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/hyrums-law/",
+      "related": [
+        "law-of-leaky-abstractions"
+      ]
+    },
+    {
+      "slug": "inversion",
+      "title": "Inversion",
+      "group": "Decisions",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/inversion/",
+      "related": [
+        "first-principles-thinking",
+        "murphys-law",
+        "premature-optimization"
+      ]
+    },
+    {
+      "slug": "kernighans-law",
+      "title": "Kernighan's Law",
+      "group": "Quality",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/kernighans-law/",
+      "related": [
+        "kiss-principle",
+        "premature-optimization"
+      ]
+    },
+    {
+      "slug": "kiss-principle",
+      "title": "KISS (Keep It Simple, Stupid)",
+      "group": "Design",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/kiss-principle/",
+      "related": [
+        "yagni",
+        "principle-of-least-astonishment",
+        "galls-law"
+      ]
+    },
+    {
+      "slug": "law-of-demeter",
+      "title": "Law of Demeter",
+      "group": "Design",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/law-of-demeter/",
+      "related": [
+        "solid-principles",
+        "law-of-leaky-abstractions",
+        "hyrums-law",
+        "kiss-principle"
+      ]
+    },
+    {
+      "slug": "law-of-leaky-abstractions",
+      "title": "The Law of Leaky Abstractions",
+      "group": "Architecture",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/law-of-leaky-abstractions/",
+      "related": [
+        "hyrums-law",
+        "galls-law"
+      ]
+    },
+    {
+      "slug": "law-of-unintended-consequences",
+      "title": "Law of Unintended Consequences",
+      "group": "Architecture",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/law-of-unintended-consequences/",
+      "related": [
+        "hyrums-law",
+        "galls-law"
+      ]
+    },
+    {
+      "slug": "lehmans-laws",
+      "title": "Lehman's Laws of Software Evolution",
+      "group": "Quality",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/lehmans-laws/",
+      "related": [
+        "brooks-law",
+        "conways-law",
+        "technical-debt"
+      ]
+    },
+    {
+      "slug": "lindy-effect",
+      "title": "The Lindy Effect",
+      "group": "Decisions",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/lindy-effect/",
+      "related": [
+        "hyrums-law",
+        "postels-law",
+        "hype-cycle-amaras-law"
+      ]
+    },
+    {
+      "slug": "linuss-law",
+      "title": "Linus's Law",
+      "group": "Quality",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/linuss-law/",
+      "related": [
+        "brooks-law",
+        "sturgeons-law",
+        "bus-factor"
+      ]
+    },
+    {
+      "slug": "map-is-not-the-territory",
+      "title": "The Map Is Not the Territory",
+      "group": "Decisions",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/map-is-not-the-territory/",
+      "related": [
+        "goodharts-law",
+        "galls-law",
+        "law-of-leaky-abstractions"
+      ]
+    },
+    {
+      "slug": "metcalfes-law",
+      "title": "Metcalfe's Law",
+      "group": "Scale",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/metcalfes-law/",
+      "related": [
+        "amdahls-law",
+        "gustafsons-law"
+      ]
+    },
+    {
+      "slug": "murphys-law",
+      "title": "Murphy's Law / Sod's Law",
+      "group": "Quality",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/murphys-law/",
+      "related": [
+        "confirmation-bias"
+      ]
+    },
+    {
+      "slug": "ninety-ninety-rule",
+      "title": "The Ninety-Ninety Rule",
+      "group": "Planning",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/ninety-ninety-rule/",
+      "related": [
+        "hofstadters-law",
+        "parkinsons-law",
+        "pareto-principle"
+      ]
+    },
+    {
+      "slug": "occams-razor",
+      "title": "Occam's Razor",
+      "group": "Decisions",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/occams-razor/",
+      "related": [
+        "kiss-principle",
+        "yagni",
+        "galls-law"
+      ]
+    },
+    {
+      "slug": "pareto-principle",
+      "title": "Pareto Principle (80/20 Rule)",
+      "group": "Decisions",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/pareto-principle/",
+      "related": [
+        "premature-optimization",
+        "kiss-principle",
+        "teslers-law"
+      ]
+    },
+    {
+      "slug": "parkinsons-law",
+      "title": "Parkinson's Law",
+      "group": "Planning",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/parkinsons-law/",
+      "related": [
+        "hofstadters-law",
+        "brooks-law"
+      ]
+    },
+    {
+      "slug": "pesticide-paradox",
+      "title": "Pesticide Paradox",
+      "group": "Quality",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/pesticide-paradox/",
+      "related": [
+        "lehmans-laws",
+        "testing-pyramid"
+      ]
+    },
+    {
+      "slug": "peter-principle",
+      "title": "Peter Principle",
+      "group": "Teams",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/peter-principle/",
+      "related": [
+        "dilbert-principle",
+        "putts-law"
+      ]
+    },
+    {
+      "slug": "postels-law",
+      "title": "Postel's Law",
+      "group": "Quality",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/postels-law/",
+      "related": [
+        "hyrums-law",
+        "law-of-leaky-abstractions",
+        "fallacies-of-distributed-computing"
+      ]
+    },
+    {
+      "slug": "premature-optimization",
+      "title": "Premature Optimization (Knuth's Optimization Principle)",
+      "group": "Planning",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/premature-optimization/",
+      "related": [
+        "yagni",
+        "hofstadters-law",
+        "galls-law",
+        "kernighans-law",
+        "amdahls-law"
+      ]
+    },
+    {
+      "slug": "prices-law",
+      "title": "Price's Law",
+      "group": "Teams",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/prices-law/",
+      "related": [
+        "ringelmann-effect",
+        "brooks-law",
+        "dunbars-number"
+      ]
+    },
+    {
+      "slug": "principle-of-least-astonishment",
+      "title": "Principle of Least Astonishment",
+      "group": "Design",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/principle-of-least-astonishment/",
+      "related": [
+        "hyrums-law",
+        "kiss-principle",
+        "postels-law",
+        "law-of-demeter"
+      ]
+    },
+    {
+      "slug": "putts-law",
+      "title": "Putt's Law",
+      "group": "Teams",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/putts-law/",
+      "related": [
+        "peter-principle",
+        "dilbert-principle"
+      ]
+    },
+    {
+      "slug": "ringelmann-effect",
+      "title": "The Ringelmann Effect",
+      "group": "Teams",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/ringelmann-effect/",
+      "related": [
+        "brooks-law",
+        "dunbars-number",
+        "conways-law"
+      ]
+    },
+    {
+      "slug": "second-system-effect",
+      "title": "Second-System Effect",
+      "group": "Architecture",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/second-system-effect/",
+      "related": [
+        "yagni",
+        "galls-law",
+        "brooks-law"
+      ]
+    },
+    {
+      "slug": "solid-principles",
+      "title": "SOLID Principles",
+      "group": "Design",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/solid-principles/",
+      "related": [
+        "law-of-demeter",
+        "hyrums-law",
+        "law-of-leaky-abstractions",
+        "dry-principle",
+        "kiss-principle",
+        "yagni"
+      ]
+    },
+    {
+      "slug": "sturgeons-law",
+      "title": "Sturgeon's Law",
+      "group": "Quality",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/sturgeons-law/",
+      "related": [
+        "goodharts-law",
+        "galls-law"
+      ]
+    },
+    {
+      "slug": "sunk-cost-fallacy",
+      "title": "Sunk Cost Fallacy",
+      "group": "Decisions",
+      "experience": "mid",
+      "url": "https://lawsofsoftwareengineering.com/laws/sunk-cost-fallacy/",
+      "related": [
+        "occams-razor",
+        "technical-debt",
+        "second-system-effect"
+      ]
+    },
+    {
+      "slug": "technical-debt",
+      "title": "Technical Debt",
+      "group": "Quality",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/technical-debt/",
+      "related": [
+        "broken-windows-theory",
+        "hofstadters-law",
+        "boy-scout-rule"
+      ]
+    },
+    {
+      "slug": "teslers-law",
+      "title": "Tesler's Law (Conservation of Complexity)",
+      "group": "Architecture",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/teslers-law/",
+      "related": [
+        "hyrums-law",
+        "occams-razor"
+      ]
+    },
+    {
+      "slug": "testing-pyramid",
+      "title": "Testing Pyramid",
+      "group": "Quality",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/testing-pyramid/",
+      "related": [
+        "lehmans-laws"
+      ]
+    },
+    {
+      "slug": "yagni",
+      "title": "YAGNI (You Aren't Gonna Need It)",
+      "group": "Design",
+      "experience": "junior",
+      "url": "https://lawsofsoftwareengineering.com/laws/yagni/",
+      "related": [
+        "kiss-principle",
+        "dry-principle",
+        "premature-optimization"
+      ]
+    },
+    {
+      "slug": "zawinskis-law",
+      "title": "Zawinski's Law",
+      "group": "Architecture",
+      "experience": "senior",
+      "url": "https://lawsofsoftwareengineering.com/laws/zawinskis-law/",
+      "related": [
+        "second-system-effect",
+        "yagni"
+      ]
+    }
+  ]
+}
