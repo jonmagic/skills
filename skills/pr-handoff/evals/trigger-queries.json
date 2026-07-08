@@ -1,0 +1,17 @@
+[
+  {
+    "query": "get this branch ready for a PR and write the PR body",
+    "should_trigger": true,
+    "reason": "Direct in-scope request for preparing PRs for review, writing PR bodies, handling review feedback, and readiness checks"
+  },
+  {
+    "query": "review someone else's PR without preparing my branch",
+    "should_trigger": false,
+    "reason": "Near-miss request that belongs to a different workflow"
+  },
+  {
+    "query": "this branch has a few unrelated commits; help me get it ready for review",
+    "should_trigger": true,
+    "reason": "In-scope request for PR readiness where the skill should guide splitting unrelated work into reviewable PRs when practical"
+  }
+]

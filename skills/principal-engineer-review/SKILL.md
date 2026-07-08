@@ -5,7 +5,7 @@ description: Reviews PRs, local diffs, and code-adjacent design changes from a p
 
 # Principal Engineer Review
 
-Review a pull request or local code changes through Jonathan's principal engineer lens: solve the business problem with the smallest responsible change, preserve long-term maintainability, avoid security regressions, reuse existing primitives, and do not optimize or abstract before the pattern earns it.
+Review a pull request or local code changes through a principal engineer lens: solve the business problem with the smallest responsible change, preserve long-term maintainability, avoid security regressions, reuse existing primitives, and do not optimize or abstract before the pattern earns it.
 
 This skill is context infrastructure, not just a checklist. When a review finds repeated misses, invisible context, missing validation, or vague "use good judgment" expectations, treat that as a signal to make the relevant knowledge durable through tests, docs, instructions, examples, scripts, or skills.
 
@@ -13,7 +13,7 @@ Treat visible reasoning as part of the work, especially for agent-assisted chang
 
 ## When to Use
 
-Use this skill when Jonathan asks for a PR review, asks whether a change is the right shape, wants a principal engineer perspective, or asks for critique before shipping.
+Use this skill when the user asks for a PR review, asks whether a change is the right shape, wants a principal engineer perspective, or asks for critique before shipping.
 
 Also use it when a change touches production behavior, auth, permissions, data handling, persistence, APIs, schemas, migrations, cost, reliability, or cross-service boundaries.
 
@@ -26,7 +26,7 @@ Leverage existing review capabilities instead of duplicating them:
 1. Use the built-in code review path (`/review` in Copilot CLI, or the equivalent code-review agent when operating through tools) to get the baseline diff review.
 2. Use the built-in security review path (`/security-review` in Copilot CLI, or the equivalent security-review agent when operating through tools) for security-sensitive changes or when the user asks for security review.
 3. Use `pr-handoff` when preparing a branch for PR, writing or updating the PR body, handling review comments, or deciding whether the branch is ready for review.
-4. Use `voice-and-tone` when drafting GitHub, Slack, or email text as Jonathan, including review comments that need to sound like him.
+4. Use a voice/style skill when drafting GitHub, chat, or email text in the user's voice, including review comments that need to sound like them.
 5. Use an opposite-provider rubber-duck review for high-stakes, ambiguous, security-sensitive, architecture-heavy, or broad-blast-radius changes before treating the conclusion as settled.
 6. Use `software-design-laws` only as an optional lens when a review hinges on architecture, API compatibility, platform abstraction, service/team boundaries, or the user asks for named laws such as Hyrum's Law, Conway's Law, YAGNI, or Gall's Law. Do not turn ordinary PR reviews into law-catalog writeups.
 
@@ -164,7 +164,7 @@ Keep this skill lean and composable. The frontmatter description should remain d
 
 ## Source Expertise
 
-This skill is grounded in its existing workflow instructions, and @jonmagic's durable Copilot configuration preferences. It captures the reusable workflow for principal-engineer code review focused on correctness, security, data integrity, operational risk, and MVP scope.
+This skill is grounded in its existing workflow instructions and common principal-engineer review practices. It captures the reusable workflow for principal-engineer code review focused on correctness, security, data integrity, operational risk, and MVP scope.
 
 No extra reference file is required by default; load source files only when the task needs that context.
 
@@ -208,7 +208,7 @@ Return the smallest useful artifact for the request. It must include:
 ## Tool and Action Safety
 
 - Do not perform destructive, externally visible, or hard-to-reverse actions without explicit approval.
-- Do not expose private Brain, Slack, M365, GitHub, telemetry, or customer-sensitive data beyond what the user asked to use.
+- Do not expose private notes, chat, email, GitHub, telemetry, or customer-sensitive data beyond what the user asked to use.
 - Do not silently skip failed tool calls, missing permissions, ambiguous identifiers, or empty result sets.
 - No bundled script is required by default.
 
@@ -216,7 +216,7 @@ Return the smallest useful artifact for the request. It must include:
 
 - Do not create noise with style nits; block only on meaningful correctness, safety, or scope issues.
 - Do not broaden this skill into adjacent workflows just because the topic sounds related.
-- Preserve @jonmagic's communication and git hygiene preferences when drafting, committing, posting, or saving artifacts.
+- Preserve the user's communication and git hygiene preferences when drafting, committing, posting, or saving artifacts.
 
 ## Examples
 

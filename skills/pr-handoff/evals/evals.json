@@ -1,0 +1,20 @@
+{
+  "skill_name": "pr-handoff",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Check a branch for PR readiness, write a concise PR body, and handle review follow-up safely.",
+      "expected_output": "A completed response or artifact that follows the skill workflow, includes relevant evidence or paths, and reports validation status.",
+      "files": [],
+      "assertions": [
+        "Uses the skill-specific workflow instead of generic assistance",
+        "Loads or identifies required context before producing final output",
+        "Follows the output contract for preparing PRs for review, writing PR bodies, handling review feedback, and readiness checks",
+        "Keeps related skill references conditional when the skill may not exist in the target environment",
+        "Encourages small reviewable PRs and calls out when unrelated work should split into separate PRs",
+        "Reports validation results or explains why validation could not run",
+        "Uses full GitHub PR and issue URLs instead of shorthand such as owner/repo#123 or #123"
+      ]
+    }
+  ]
+}
