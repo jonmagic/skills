@@ -1,0 +1,30 @@
+{
+  "skill_name": "principal-engineer-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review a code diff and report only high-signal material risks with evidence. If architecture or API laws would sharpen the critique, compose with software-design-laws as a short lens instead of turning the whole review into a law catalog.",
+      "expected_output": "A completed response or artifact that follows the skill workflow, includes relevant evidence or paths, and reports validation status.",
+      "files": [],
+      "assertions": [
+        "Uses the skill-specific workflow instead of generic assistance",
+        "Loads or identifies required context before producing final output",
+        "Follows the output contract for principal-engineer code review focused on correctness, security, data integrity, operational risk, and MVP scope",
+        "Keeps software-design-laws optional and only uses it when it materially changes architecture, API, platform, or boundary critique",
+        "Reports validation results or explains why validation could not run"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Review a PR where the diff looks correct but there is insufficient evidence to evaluate whether the central behavior works or is safe. Decide what the smallest concrete ask is before merge.",
+      "expected_output": "A principal-engineer review that distinguishes finished-looking output from reviewable reasoning, avoids process theater, and asks for concrete evidence only when it affects correctness, safety, rollback, or scope.",
+      "files": [],
+      "assertions": [
+        "Checks whether the PR makes why, approach, validation, uncertainty, and rediscovery notes visible enough to review",
+        "Does not require transcript dumps or broad process when missing reasoning is not material",
+        "Raises missing reasoning as blocking only when correctness, safety, rollback, or scope cannot be evaluated from available evidence",
+        "Recommends a durable context improvement when the missing reasoning is likely to recur"
+      ]
+    }
+  ]
+}

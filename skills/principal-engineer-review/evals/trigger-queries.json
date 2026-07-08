@@ -1,0 +1,27 @@
+[
+  {
+    "query": "review these changes like a principal engineer and only flag material issues",
+    "should_trigger": true,
+    "reason": "Direct in-scope request for principal-engineer code review focused on correctness, security, data integrity, operational risk, and MVP scope"
+  },
+  {
+    "query": "format this file and fix trivial style nits",
+    "should_trigger": false,
+    "reason": "Near-miss request that belongs to a different workflow"
+  },
+  {
+    "query": "review this API compatibility change like a principal engineer and tell me whether we are overbuilding",
+    "should_trigger": true,
+    "reason": "Principal-engineer review should own code-adjacent design critique and may compose software-design-laws only as a lens"
+  },
+  {
+    "query": "which laws of software engineering apply to this platform abstraction proposal?",
+    "should_trigger": false,
+    "reason": "Named-law design analysis should trigger software-design-laws directly rather than principal-engineer-review"
+  },
+  {
+    "query": "review this agent-assisted PR and tell me whether the reasoning is visible enough to merge",
+    "should_trigger": true,
+    "reason": "Principal-engineer-review should evaluate whether finished-looking agent-assisted work includes enough reasoning, validation, and uncertainty for a material review"
+  }
+]
