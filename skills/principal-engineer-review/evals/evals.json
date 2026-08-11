@@ -3,15 +3,17 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Review a code diff and report only high-signal material risks with evidence. If architecture or API laws would sharpen the critique, compose with software-design-laws as a short lens instead of turning the whole review into a law catalog.",
-      "expected_output": "A completed response or artifact that follows the skill workflow, includes relevant evidence or paths, and reports validation status.",
+      "prompt": "Review a code diff and report only high-signal material risks with evidence. If architecture or API principles would sharpen the critique, use references/design-lens.md as a short lens instead of turning the whole review into a law catalog.",
+      "expected_output": "A review that leads with one of the four allowed decisions, separates blocking from non-blocking findings with path evidence, omits style nits, and uses the design lens sparingly if at all.",
       "files": [],
       "assertions": [
-        "Uses the skill-specific workflow instead of generic assistance",
-        "Loads or identifies required context before producing final output",
-        "Follows the output contract for principal-engineer code review focused on correctness, security, data integrity, operational risk, and MVP scope",
-        "Keeps software-design-laws optional and only uses it when it materially changes architecture, API, platform, or boundary critique",
-        "Reports validation results or explains why validation could not run"
+        "Leads with one of Looks ready, Comment-only, Needs changes before merge, or Not enough context",
+        "Separates blocking findings from non-blocking follow-up rather than presenting one flat list",
+        "Cites a file path for each finding and names the concrete consequence instead of suggesting an improvement in the abstract",
+        "Omits style, formatting, and naming comments unless they affect correctness, security, data integrity, or maintainability",
+        "Keeps references/design-lens.md optional and only uses it when it materially changes architecture, API, platform, or boundary critique",
+        "Applies at most three named principles rather than cataloging every law that could apply",
+        "States which validation ran, or names exactly what was missing, without implying it passed"
       ]
     },
     {
@@ -24,6 +26,176 @@
         "Does not require transcript dumps or broad process when missing reasoning is not material",
         "Raises missing reasoning as blocking only when correctness, safety, rollback, or scope cannot be evaluated from available evidence",
         "Recommends a durable context improvement when the missing reasoning is likely to recur"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "/principal-engineer-review next",
+      "expected_output": "A read-only principal-engineer review package for the newest eligible direct request, or the newest eligible team request when no direct request qualifies. An explicit no-eligible-request result is also valid. The first pass stops before drafting or posting a GitHub response.",
+      "files": [],
+      "assertions": [
+        "Resolves the authenticated GitHub login and discovers candidates without asking the user for a PR URL",
+        "Searches the direct-review queue first and only searches the broader team-capable queue when no direct request qualifies",
+        "Considers only open, non-draft PRs from non-archived repositories that the authenticated user has not reviewed",
+        "Prioritizes the newest eligible direct request, then the newest eligible team request",
+        "Selects an older eligible direct request over a newer eligible team request",
+        "Validates the selected PR before beginning the AI review step and fails closed on discovery or validation errors",
+        "Returns the selected PR identity, selection reason, decision, material findings, evidence, useful non-blocking feedback, and uncertainty",
+        "Includes a compact orientation and context map by default unless earlier conversation demonstrates the relevant system context",
+        "Treats the review decision as analysis only and stops for human review before drafting review-comment prose, choosing a GitHub disposition, or mutating GitHub"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Review Fixture A in examples/closure-review-fixtures.md and decide whether the production incident fix is ready to merge.",
+      "expected_output": "A high-risk review that traces the affected collection through the real execution path, finds the equivalent downstream argument-expansion hazard, and blocks merge with checkable evidence.",
+      "files": [
+        "examples/closure-review-fixtures.md"
+      ],
+      "assertions": [
+        "Classifies production incident and scale-limit remediation as high-risk",
+        "Names the changed invariant or failure mechanism instead of reviewing only the changed syntax",
+        "Cites the downstream consumer and the equivalent spread hazard with checkable evidence",
+        "Explains why the helper-only test is a proxy rather than proof of the integration path",
+        "Returns Needs changes before merge rather than Looks ready"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Review Fixture B in examples/closure-review-fixtures.md and decide whether the selective cache change is safe to deploy behind its disabled flag.",
+      "expected_output": "A high-risk structural and operational-contract review that finds the ancestry-dependent telemetry regression and blocks merge.",
+      "files": [
+        "examples/closure-review-fixtures.md"
+      ],
+      "assertions": [
+        "Treats structural runtime composition and rollout-critical telemetry as high-risk",
+        "Names ancestry order as the changed implicit contract",
+        "Inspects consumers of ancestry or class identity rather than only the prepended module behavior",
+        "Compares the emitted telemetry tag with the dashboard filter",
+        "Returns Needs changes before merge with path or contract evidence"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Review Fixture C in examples/closure-review-fixtures.md and decide whether the retry-logging refactor preserves existing behavior. Keep the review proportional and evidence-based.",
+      "expected_output": "A behavior-sensitive or high-risk review that generalizes the changed-invariant rule to a novel implicit contract without tracing unrelated application paths.",
+      "files": [
+        "examples/closure-review-fixtures.md"
+      ],
+      "assertions": [
+        "Identifies identity metadata as the changed implicit contract",
+        "Inspects the serializer as a consumer of that contract",
+        "Requires checkable path and search evidence before claiming closure",
+        "Keeps the trace bounded to relevant consumers",
+        "Does not rely only on the spread or ancestry examples"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Review this PR scenario and decide whether it is ready to merge. The PR adds a shadow worker beside the legacy poller. `shadow_worker_enabled` will be enabled during validation, while `shadow_live_actions_enabled` stays off until a later cutover decision. The code always enqueues the legacy poll and additionally enqueues the shadow when `shadow_worker_enabled` is on. In `retry_failed_scan`, the shadow records a metric and returns unless `shadow_live_actions_enabled` is on; when on, it calls `Scanner.start_scan` and re-enqueues itself. A focused test deliberately asserts that enabling live actions calls `Scanner.start_scan`, while the legacy path remains present. The rollout notes say to validate the no-op shadow first and settle production ownership before enabling live actions, but do not say whether duplicate replacement scans during a temporary dual-live phase are intended.",
+      "expected_output": "A calibrated review that treats the duplicate live-action path as deliberate but ambiguous activation-time behavior, asks for intent if needed, and does not turn a dormant flag concern into a merge blocker.",
+      "files": [],
+      "assertions": [
+        "Uses rollout notes, feature-flag defaults, and tests as evidence of intended behavior",
+        "Classifies duplicate replacement scans as activation-time rather than merge-time under the stated rollout",
+        "Asks a narrow intent question instead of asserting an ambiguous deliberate behavior is a proven bug",
+        "Distinguishes safe to merge from safe to enable",
+        "Returns Looks ready or Comment-only unless additional evidence makes the live-action path reachable now"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Invoke the principal-engineer-review skill before answering. No PR, diff, or repository tools are supplied. Describe the exact review routing for a high-risk migration PR that already includes a fresh opposite-provider critique covering rollback, compatibility, and data integrity. Explain how the existing critique changes reviewer selection and do not claim a readiness decision.",
+      "expected_output": "A principal-engineer review plan that reuses the fresh independent critique, verifies its material claims against repository evidence when available, and does not launch a duplicate rubber-duck reviewer.",
+      "files": [],
+      "assertions": [
+        "Recognizes that the fresh same-scope opposite-provider critique satisfies the independent-review need",
+        "Does not launch another rubber-duck reviewer for rollback, compatibility, or data integrity",
+        "Requires verification of material critique claims against the diff, tests, and documented runtime contracts",
+        "Uses a third model only if a consequential disagreement remains after direct verification",
+        "Does not claim a readiness decision without the PR evidence"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Help me understand this PR well enough to review it. I am a capable junior engineer, but I have no context on this repository. The PR changes a retry counter so normal polling and real failures no longer share the same budget.",
+      "expected_output": "A compact guided review that starts with purpose and before/after behavior, defines only the necessary concepts, presents material findings with evidence, and makes deeper conversational paths obvious without dumping a repository tour.",
+      "files": [],
+      "assertions": [
+        "Treats junior engineer as limited system context rather than limited technical ability",
+        "Explains the business purpose and before/after behavior before relying on repository-specific terminology",
+        "Places orientation before the decision and findings because the user has no demonstrated context",
+        "Provides a concrete mental model of the relevant execution or data path",
+        "Defines only terms needed to understand the material findings",
+        "Separates verified facts, interpretation, and unresolved questions",
+        "Keeps the initial response compact rather than providing a file-by-file walkthrough",
+        "Offers relevant deeper paths such as tracing execution, inspecting tests, comparing alternatives, or revisiting a finding",
+        "Does not draft feedback or ask for a GitHub review disposition"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "I already understand the request path, the retry scheduler, and why polling must not consume the failure budget. Review whether the cleanup ordering preserves that invariant.",
+      "expected_output": "An adaptive review that recognizes the user's demonstrated context, skips basic teaching, and focuses on the decision, evidence, cleanup ordering, and remaining uncertainty.",
+      "files": [],
+      "assertions": [
+        "Recognizes the concepts the user has already demonstrated",
+        "Does not repeat the request-path or retry-counter mental model",
+        "Leads with the decision and evidence relevant to cleanup ordering because the user already has context",
+        "Explains only new concepts that materially affect the finding",
+        "Keeps deeper explanation available on demand"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Trace the execution path behind the first blocking finding and explain why the focused unit test does not prove the production behavior.",
+      "expected_output": "A focused pair-partner deep dive into one finding that walks the relevant path, distinguishes proxy coverage from integration evidence, and names unavailable evidence without guessing.",
+      "files": [],
+      "assertions": [
+        "Deepens only the requested finding rather than repeating the full review",
+        "Walks the relevant execution path in order",
+        "Connects each material step to checkable evidence",
+        "Explains why the unit test is a proxy rather than proof of the production path",
+        "Names the smallest missing test or runtime evidence that would close the question"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "I think your blocking finding is wrong because the dangerous path is behind a disabled flag. Re-check it against the rollout and tests.",
+      "expected_output": "A non-defensive re-evaluation that verifies reachability, updates the finding when warranted, and distinguishes safe to merge from safe to enable.",
+      "files": [],
+      "assertions": [
+        "Re-checks feature-flag defaults, rollout notes, tests, and runtime reachability",
+        "Updates, downgrades, or withdraws the finding when the evidence warrants it",
+        "Distinguishes merge-time from activation-time risk",
+        "Does not defend the original conclusion based on authority",
+        "States what remains uncertain after the re-check"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "The review explanation makes sense. Turn the blocking finding into a concise review comment.",
+      "expected_output": "A concise standalone review comment drafted from the established evidence without repeating the full explanation or posting.",
+      "files": [],
+      "assertions": [
+        "Recognizes that the user has demonstrated understanding",
+        "Drafts directly from the established review evidence",
+        "Does not repeat the full PR orientation",
+        "Includes the concrete consequence and practical safer path",
+        "Uses path and line evidence when available",
+        "Does not post or choose a disposition"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Post this principal-engineer review as a request for changes.",
+      "expected_output": "A self-contained posting safety gate that requires the exact draft, repository-qualified target, request-changes disposition, freshness check, privacy scan, and explicit approval before any GitHub write.",
+      "files": [],
+      "assertions": [
+        "Shows or identifies the exact review text covered by approval",
+        "Requires a full repository-qualified PR URL",
+        "Requires explicit approval of the request-changes disposition",
+        "Preserves head-SHA freshness and external-text privacy validation before any write"
       ]
     }
   ]
