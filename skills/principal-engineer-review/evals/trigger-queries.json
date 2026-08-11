@@ -5,6 +5,21 @@
     "reason": "Direct in-scope request for principal-engineer code review focused on correctness, security, data integrity, operational risk, and MVP scope"
   },
   {
+    "query": "help me understand this PR well enough to review it",
+    "should_trigger": true,
+    "reason": "Direct request for PR context building and guided review"
+  },
+  {
+    "query": "explain this pull request like I am a junior engineer who is new to this system",
+    "should_trigger": true,
+    "reason": "Requests the skill's adaptive reviewer-orientation workflow for an existing PR"
+  },
+  {
+    "query": "trace the execution path behind the first blocking finding",
+    "should_trigger": true,
+    "reason": "Follow-up request to deepen an existing principal-engineer review finding"
+  },
+  {
     "query": "format this file and fix trivial style nits",
     "should_trigger": false,
     "reason": "Near-miss request that belongs to a different workflow"
@@ -12,7 +27,7 @@
   {
     "query": "review this API compatibility change like a principal engineer and tell me whether we are overbuilding",
     "should_trigger": true,
-    "reason": "Principal-engineer review should own code-adjacent design critique and may compose software-design-laws only as a lens"
+    "reason": "Principal-engineer review should own code-adjacent design critique and may use its optional design lens when it materially sharpens the review"
   },
   {
     "query": "which laws of software engineering apply to this platform abstraction proposal?",
@@ -23,5 +38,45 @@
     "query": "review this agent-assisted PR and tell me whether the reasoning is visible enough to merge",
     "should_trigger": true,
     "reason": "Principal-engineer-review should evaluate whether finished-looking agent-assisted work includes enough reasoning, validation, and uncertainty for a material review"
+  },
+  {
+    "query": "/principal-engineer-review next",
+    "should_trigger": true,
+    "reason": "Exact invocation for selecting and reviewing the next pending GitHub review request"
+  },
+  {
+    "query": "find the next PR I was directly or through a team asked to review, but let me inspect the analysis before we draft a response",
+    "should_trigger": true,
+    "reason": "In-scope next-review discovery with an explicit human gate before response drafting"
+  },
+  {
+    "query": "/manage-pr next",
+    "should_trigger": false,
+    "reason": "Managing an existing PR through comments, CI, or merge readiness belongs to manage-pr rather than principal-engineer-review"
+  },
+  {
+    "query": "use the review we just did to draft a humble Slack reply",
+    "should_trigger": false,
+    "reason": "The requested action is a Slack reply rather than PR review analysis or review-comment drafting"
+  },
+  {
+    "query": "explain how this authentication module works",
+    "should_trigger": false,
+    "reason": "Pure code comprehension with no change under review does not activate principal-engineer-review"
+  },
+  {
+    "query": "walk me through this file so I can implement a new feature",
+    "should_trigger": false,
+    "reason": "Implementation-oriented code explanation is not a request to review existing work"
+  },
+  {
+    "query": "rewrite this CLI so it reads through a cache and writes through the REST API, and make sure the reordering stays correct",
+    "should_trigger": false,
+    "reason": "Implementation work that touches persistence, APIs, and reliability but contains no review request; subject matter alone must not activate the skill"
+  },
+  {
+    "query": "add a migration that changes this column default and backfill the existing rows",
+    "should_trigger": false,
+    "reason": "Schema and migration work is named in the risk-area list but is being asked for as implementation, not as a review"
   }
 ]
