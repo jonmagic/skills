@@ -2,6 +2,28 @@
 
 A collection of [Agent Skills](https://github.com/agentskills/agentskills) I have developed for GitHub Copilot and other AI agents. Each skill is a folder containing a `SKILL.md` file with specialized instructions, examples, and resources for specific tasks.
 
+## Installing Skills
+
+[APM](https://microsoft.github.io/apm/) is the recommended installer when you want a reproducible personal or project skill set with dependency tracking and updates.
+
+Install one skill globally:
+
+```bash
+apm install -g jonmagic/skills --skill principal-engineer-review
+```
+
+For a project, omit `-g`; APM records the dependency in `apm.yml`:
+
+```bash
+apm install jonmagic/skills --skill principal-engineer-review
+```
+
+Use GitHub CLI when you want a built-in installer without adding APM:
+
+```bash
+gh skill install jonmagic/skills principal-engineer-review --scope user
+```
+
 ## Skills
 
 <!-- SKILLS-LIST:START -->
