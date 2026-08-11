@@ -1,26 +1,24 @@
 ---
 name: roundtable
-description: Run a multi-model roundtable for architecture decisions, ambiguous tradeoffs, strategy questions, investigation framing, or when the user asks for multiple model perspectives. Fans prompts out to several models, critiques disagreement, and synthesizes consensus plus dissent. Not for fleet mode.
+description: Run an explicitly requested multi-model review or adjudicate a consequential disagreement between a driver and reviewer. Uses one different-provider reviewer by default and a third provider only when direct verification cannot resolve the dispute. Not for routine ambiguity or fleet mode.
 ---
 
 # Roundtable
 
-Roundtable is a reusable moderation protocol for getting several independent model perspectives on the same prompt, then synthesizing useful agreement, disagreement, dissent, and flip-point assumptions.
+Roundtable is a bounded multi-model review protocol. The top-level CLI session remains the driver, produces a provisional recommendation, and owns the final synthesis. One model from a different provider challenges that recommendation. A third provider is an adjudicator only when the disagreement is consequential and tests, source inspection, prototypes, or other direct evidence cannot resolve it.
 
-The top-level CLI session remains the moderator. The moderator decides whether the prompt is worth the extra latency and cost, fans the prompt out to panelists, evaluates whether disagreement is substantive, and produces the final synthesis. Do not use this skill as fleet mode; fleet mode is a separate workflow for highest-stakes consensus building across provider representatives.
+This is not fleet mode. Fleet mode is the exceptional all-provider workflow for explicitly requested, contested, and irreversible decisions.
 
 ## When to Use
 
-Use this skill when the user asks for:
+Use this skill when the user explicitly asks for:
 
-- "roundtable"
-- "multiple model opinions"
-- "multiple perspectives"
-- "get a few models to weigh in"
-- architecture or API design tradeoffs
-- ambiguous strategy or planning questions
-- investigation framing where the right hypothesis is unclear
-- comparative judgment calls where disagreement is useful
+- a roundtable
+- multiple model opinions or perspectives
+- another provider to challenge a recommendation
+- adjudication after two models disagree
+
+Do not activate this skill merely because a question involves architecture, API design, strategy, planning, investigation framing, or an ambiguous tradeoff. The top-level driver should handle those questions directly unless the user asks for multi-model review or a consequential driver/reviewer disagreement remains unresolved.
 
 Do not use this skill for:
 
@@ -30,186 +28,158 @@ Do not use this skill for:
 - file searches
 - running queries
 - formatting or mechanical changes
-- tasks where direct tool use is faster
-- tasks that require live tool loops from each panelist
+- tasks where direct tools can answer the disputed question
+- tasks that require live tool loops from every model
 
-If the prompt is really a tool-use task or factual lookup, say that roundtable is the wrong shape and proceed with the default direct workflow.
+If the prompt is really a tool-use task or factual lookup, say that roundtable is unnecessary and proceed with the direct workflow.
 
-## Default Panel
+## Provider Selection
 
-Use real model IDs exposed by the current CLI tooling, not display names from another client.
+Read the live model list from the `task` tool. Do not hard-code model IDs because they go stale.
 
-Default three-model panel:
+1. Keep the top-level session as the driver.
+2. Choose the strongest suitable reviewer from a different provider.
+3. If adjudication is required, choose the strongest suitable model from a third provider.
+4. Avoid narrow coding, mini, flash, or picker variants unless the task specifically benefits from them.
+5. State the actual model IDs used in the synthesis.
 
-1. `gpt-5.5`
-2. `claude-opus-4.8`
-3. `gemini-3.1-pro-preview`
+If the user names a lineup, use it when available. If a requested model is unavailable, omit it and state that directly. Never silently substitute a requested provider.
 
-Optional fourth panelist when a fourth perspective is clearly useful:
+If the environment cannot enumerate or select another provider, state the capability gap instead of fabricating a review. Ask the user to name an available reviewer only when the environment requires manual model selection.
 
-4. `claude-sonnet-4.6`
+## Step 1 - Driver Recommendation
 
-If the user names a different lineup, use theirs when available. If a requested model is unavailable, omit it and state that in the synthesis. Never silently substitute models.
+The top-level session gathers the relevant evidence and writes a provisional recommendation before invoking another model.
 
-## Moderator Rules
-
-- Do not answer the user's question directly before running the panel.
-- Use the same prompt and context for every Round 1 panelist.
-- Keep context minimal and identical across panelists.
-- Prefer read-only subagents for panelists.
-- Run panelists in parallel when tooling supports it.
-- Do not fabricate panelist responses.
-- If a panelist fails, say that it did not respond.
-- Do not treat the moderator as an additional vote.
-- If adding a moderator view, label it `Moderator note:`.
-- Do not dump full transcripts by default; provide them only if the user asks.
-- Keep the final synthesis concise unless the user explicitly asks for depth.
-
-## Round 1 - Independent Answers
-
-Spawn one subagent per panelist with the same prompt.
-
-Use this template:
+Keep it concise:
 
 ```text
-You are participating in a roundtable of LLMs answering the same question independently. Do not assume what other models will say. Answer in your own voice.
+RECOMMENDATION:
+<one sentence>
+
+REASONING:
+<the smallest evidence-backed explanation>
+
+MATERIAL UNCERTAINTY:
+<the claim or assumption most worth challenging>
+```
+
+Do not present the provisional recommendation to the user as settled.
+
+## Step 2 - Independent Reviewer
+
+Spawn one reviewer from a different provider with the bounded prompt:
+
+```text
+You are the independent reviewer for a multi-model decision. Challenge the driver's recommendation rather than producing a broad second essay.
 
 USER QUESTION:
 <verbatim user prompt>
 
 CONTEXT:
-<minimal relevant context, identical across panelists>
+<minimal relevant context>
+
+DRIVER RECOMMENDATION:
+<driver recommendation and reasoning>
 
 INSTRUCTIONS:
-1. Answer the question directly and concretely.
-2. State your top recommendation in one sentence at the top.
-3. Then give your reasoning in <= 300 words.
-4. List the strongest counterargument to your own position in 1-2 sentences.
-5. List 1-3 assumptions you made that, if wrong, would flip your answer.
-
-Do not hedge. Do not include disclaimers. Do not ask clarifying questions back. Pick the most plausible interpretation and proceed.
+1. State whether you agree or disagree with the recommendation.
+2. Identify the strongest material failure mode, missing assumption, or counterexample.
+3. Name the exact claim that would need verification to settle any disagreement.
+4. Recommend the smallest correction if one is needed.
+5. Keep the response under 300 words.
 ```
 
-## Round 2 - Critique
+Do not launch several reviewers. If clarification is needed, send a focused follow-up to the same reviewer when possible.
 
-Run this round only when Round 1 produced substantive disagreement, such as different top recommendations or the same recommendation with conflicting reasoning.
+## Step 3 - Resolve Disagreement Directly
 
-For each responding panelist, spawn a critique pass with the same model:
+Compare the driver and reviewer.
+
+Stop without another model when:
+
+- they agree on the recommendation,
+- the disagreement does not affect the decision,
+- the disputed claim can be resolved with tests, source inspection, prototypes, calculations, or authoritative documentation,
+- or the available evidence already favors one position.
+
+Use direct tools to verify checkable claims. Record the evidence that resolved the disagreement.
+
+## Step 4 - Conditional Adjudicator
+
+Invoke one third-provider adjudicator only when all of the following are true:
+
+1. The driver and reviewer disagree.
+2. The disagreement affects correctness, safety, reversibility, user impact, or a committed architecture decision.
+3. Direct verification cannot resolve the disputed claim.
+
+Use this bounded prompt:
 
 ```text
-You previously answered the following question in a roundtable:
+You are adjudicating one unresolved disagreement. Decide the disputed claim from the supplied evidence. Do not restart the whole analysis.
 
 USER QUESTION:
 <verbatim user prompt>
 
-YOUR PRIOR ANSWER:
-<that panelist's Round 1 output>
+CONTEXT:
+<minimal relevant context>
 
-OTHER PANELISTS' ANSWERS:
-<concatenated Round 1 outputs from the other models, labeled by model name>
+DRIVER POSITION:
+<driver recommendation>
+
+REVIEWER POSITION:
+<reviewer critique>
+
+DISPUTED CLAIM:
+<one concrete claim>
 
 INSTRUCTIONS:
-1. Identify the strongest point any other panelist made that you did not consider.
-2. State whether it changes your recommendation. If yes, give the revised recommendation. If no, explain concisely why.
-3. Identify the weakest claim in another panelist's answer and explain the flaw in 1-2 sentences.
-4. Keep total response under 250 words.
+1. Decide which position is better supported, or state that the evidence is insufficient.
+2. Explain the deciding reason in no more than 200 words.
+3. Name the evidence or assumption that would reverse the decision.
 ```
 
-Skip Round 2 when the panel converges. Unanimous or near-unanimous agreement is useful signal; do not add critique latency unless it changes the decision quality.
+The adjudicator is not a third vote in a popularity contest. Its job is to resolve the named dispute or state that the evidence remains insufficient.
 
 ## Synthesis Format
 
-Use this structure for the final answer:
+Use this structure:
 
 ```markdown
 ## Recommendation
-<one to three sentences with the synthesized answer. If the panel converged, state the consensus. If they split, state the moderator's call and why.>
+<one to three sentences with the final recommendation and confidence>
 
-## How the panel voted
-- **<Model A>**: <one-line position>
-- **<Model B>**: <one-line position>
-- **<Model C>**: <one-line position>
+## Driver
+**<model ID>**: <provisional position>
 
-## Where they agreed
-- <shared point>
+## Independent review
+**<model ID>**: <strongest challenge and whether it changed the recommendation>
 
-## Where they disagreed
-- <genuine disagreement and which panelists were on each side>
+## Resolution
+<direct evidence that settled the disagreement, or why direct verification was unavailable>
+
+## Adjudication
+**<model ID or "Not needed">**: <decision on the disputed claim>
 
 ## Dissent worth keeping
-<minority opinion the moderator thinks the user should not dismiss, or "None" if there was no meaningful dissent.>
+<remaining minority concern, or "None">
 
-## Assumptions that would flip the answer
-- <deduped assumption>
+## Assumptions that would change the answer
+- <assumption>
 ```
 
-Keep the synthesis under roughly 400 words unless the user asks for depth.
-
-## Example Prompts
-
-- "Use the roundtable skill to evaluate this architecture choice."
-- "Get multiple model perspectives on whether this migration plan is sound."
-- "Run a roundtable on the investigation framing for this ambiguous incident."
-- "I want a roundtable, not fleet mode, on this API design tradeoff."
+Keep the synthesis under roughly 400 words unless the user asks for depth. Do not dump full model transcripts by default.
 
 ## Relationship to Fleet Mode
 
-Roundtable is not fleet mode.
-
-Use roundtable for ordinary multi-model perspective gathering where disagreement is helpful but the decision is not necessarily highest-stakes. Use fleet mode only when the user explicitly asks for it or when the decision is contested, irreversible, or high-stakes enough to warrant one representative from each major provider.
-
-## Source Expertise
-
-This skill is grounded in its existing workflow instructions and conventions. It captures the reusable workflow for multi-model roundtables for ambiguous architecture, strategy, tradeoff, or investigation decisions.
-
-No extra reference file is required by default; load source files only when the task needs that context.
-
-## Anchored Workflow
-
-### Deterministic prefix
-
-1. Confirm the user's request matches this skill's scope: multi-model roundtables for ambiguous architecture, strategy, tradeoff, or investigation decisions.
-2. Load only the needed local instructions, references, scripts, assets, and source files.
-3. Resolve required identifiers, paths, dates, accounts, repositories, or output destinations before drafting or acting.
-
-### AI decision step
-
-Use AI judgment for bounded interpretation: selecting relevant context, classifying the request, drafting the response or artifact, and identifying risks, gaps, or follow-up questions.
-
-### Validation step
-
-Before side effects or completion claims, validate that the output follows this skill's contract, required inputs are present, citations or evidence are attached when needed, and any repo/tool-specific checks have passed or are explicitly reported as unavailable.
-
-### Deterministic suffix
-
-Only after validation, write files, run scripts, call APIs, post messages, create commits, or return the final artifact. Keep side effects scoped to the confirmed task.
-
-## Output Contract
-
-Return the smallest useful artifact for the request. It must include:
-
-1. The concrete result or draft requested by the user.
-2. Source paths, links, commands, or evidence when the work depends on retrieved context.
-3. Any blocking gaps, assumptions, or validation that could not be completed.
-4. A saved file path, commit SHA, rendered artifact, or posted destination when a side effect was explicitly requested and completed.
-
-## Validation Gates
-
-- The frontmatter description must remain scoped to this skill and not trigger on near-miss tasks.
-- Required inputs must be explicit before running tools or writing files.
-- Generated files or final outputs must match the conventions that apply to the target repository, service, document, or artifact type.
-- If validation cannot run, say so directly and do not claim the side effect is complete.
-
-## Tool and Action Safety
-
-- Do not perform destructive, externally visible, or hard-to-reverse actions without explicit approval.
-- Do not expose private or sensitive data beyond what the user asked to use.
-- Do not silently skip failed tool calls, missing permissions, ambiguous identifiers, or empty result sets.
-- No bundled script is required by default.
+Roundtable uses one reviewer and, only when necessary, one adjudicator. Fleet mode uses one model per major provider from the start. Route explicit requests for all three providers, a full panel, or fleet mode to that workflow.
 
 ## Gotchas
 
-- Roundtable is for contested or ambiguous decisions, not routine work that a single agent can do.
+- Explicit multi-model wording is required for discovery; ordinary ambiguity stays with the top-level driver.
+- Prefer direct verification over adjudication.
+- Do not treat minor stylistic disagreement as consequential.
+- Do not run a critique round for every model.
 - Do not broaden this skill into adjacent workflows just because the topic sounds related.
 - Preserve the user's communication and git hygiene preferences when drafting, committing, posting, or saving artifacts.
 
@@ -218,7 +188,12 @@ Return the smallest useful artifact for the request. It must include:
 Should trigger:
 
 - "run a roundtable on this architecture tradeoff"
+- "get another provider to challenge this recommendation"
+- "two models disagree and I want a third provider to adjudicate"
 
 Should not trigger:
 
+- "ask all three providers and synthesize the result"
+- "which architecture would you choose?"
+- "investigate why this test is failing"
 - "make a quick one-model wording edit"
