@@ -1,6 +1,6 @@
-# Build orchestration reference
+# Implementation orchestration reference
 
-Use this reference when the `build` skill needs to decide how much orchestration a task deserves.
+Use this reference when the `implement` skill needs to decide how much orchestration a task deserves.
 
 ## External patterns worth preserving
 
@@ -12,7 +12,7 @@ Source: https://agentskills.io/specification
 
 What to borrow:
 
-- keep `build` as a conductor rather than copying every specialist workflow
+- keep `implement` as a conductor rather than copying every specialist workflow
 - link to references only for tuning or edge cases
 - compose narrower skills instead of duplicating them
 
@@ -37,7 +37,7 @@ What to borrow:
 
 ### OpenAI manager, guardrail, and evaluation guidance
 
-OpenAI distinguishes manager-style agents-as-tools from handoffs. `build` uses the manager pattern: specialists return bounded results while the conductor retains the user-facing task and final synthesis. OpenAI also recommends deterministic orchestration where possible, approvals at side-effect boundaries, structured outputs for programmatic gates, and trace-backed evaluations for durable workflows.
+OpenAI distinguishes manager-style agents-as-tools from handoffs. `implement` uses the manager pattern: specialists return bounded results while the conductor retains the user-facing task and final synthesis. OpenAI also recommends deterministic orchestration where possible, approvals at side-effect boundaries, structured outputs for programmatic gates, and trace-backed evaluations for durable workflows.
 
 Sources:
 
@@ -59,7 +59,7 @@ What to borrow:
 
 | Task condition | Preferred state | Notes |
 | --- | --- | --- |
-| Clear plan, low blast radius | Narrow build | Direct tools, red-green-refactor, targeted validation |
+| Clear plan, low blast radius | Narrow implementation | Direct tools, red-green-refactor, targeted validation |
 | Fuzzy plan with decision-changing ambiguity | Clarification | Ask one question with a recommended default |
 | Multiple credible designs with material tradeoffs | Wide design | Prefer prototypes or source-backed comparison |
 | First pass fails or becomes brittle | Recovery | Identify the failed assumption instead of patching symptoms |

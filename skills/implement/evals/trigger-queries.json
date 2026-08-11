@@ -1,6 +1,6 @@
 [
   {
-    "query": "build this feature from the attached spec and finish the implementation",
+    "query": "implement this feature from the attached spec and finish the implementation",
     "should_trigger": true,
     "reason": "End-to-end implementation request"
   },

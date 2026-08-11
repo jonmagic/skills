@@ -1,12 +1,12 @@
 {
-  "skill_name": "build",
+  "skill_name": "implement",
   "evals": [
     {
       "id": 1,
-      "prompt": "Invoke the build skill before answering. No repository or tools are supplied. Classify the build state and describe the exact workflow for adding a small optional CLI flag with the repository's existing option parser, updating its focused unit test, and verifying help output. Do not claim the change was implemented.",
-      "expected_output": "A Narrow build workflow using direct tools, red-green-refactor, a focused test, and CLI help verification, with the independent-review gate closed.",
+      "prompt": "Invoke the implement skill before answering. No repository or tools are supplied. Classify the implementation state and describe the exact workflow for adding a small optional CLI flag with the repository's existing option parser, updating its focused unit test, and verifying help output. Do not claim the change was implemented.",
+      "expected_output": "A Narrow implementation workflow using direct tools, red-green-refactor, a focused test, and CLI help verification, with the independent-review gate closed.",
       "assertions": [
-        "Classifies the task as Narrow build",
+        "Classifies the task as Narrow implementation",
         "Uses the existing option parser",
         "Adds or identifies a focused failing check",
         "Keeps the independent-review gate closed",
@@ -15,7 +15,7 @@
     },
     {
       "id": 2,
-      "prompt": "Invoke the build skill before answering. Resume a cross-platform file-watcher feature whose first implementation passed on macOS but failed on Linux because it relied on an OS-specific event API. Describe the recovery workflow.",
+      "prompt": "Invoke the implement skill before answering. Resume a cross-platform file-watcher feature whose first implementation passed on macOS but failed on Linux because it relied on an OS-specific event API. Describe the recovery workflow.",
       "expected_output": "A Recovery workflow that identifies the failed portability assumption, adds a cross-platform acceptance check, compares portable designs with evidence, and validates supported platforms.",
       "assertions": [
         "Classifies the task as Recovery",
@@ -28,7 +28,7 @@
     },
     {
       "id": 3,
-      "prompt": "Invoke the build skill before answering. Only repository read, edit, shell, and test tools are available. Implement a medium-sized feature from a local specification and explain how the workflow behaves without auxiliary skills or specialist agents.",
+      "prompt": "Invoke the implement skill before answering. Only repository read, edit, shell, and test tools are available. Implement a medium-sized feature from a local specification and explain how the workflow behaves without auxiliary skills or specialist agents.",
       "expected_output": "A portable workflow that proceeds with direct tools, preserves safety and quality requirements, and reports capability gaps for external writes, privileged access, policy, or specialized checks.",
       "assertions": [
         "Does not stop solely because general reasoning helpers are unavailable",
@@ -40,7 +40,7 @@
     },
     {
       "id": 4,
-      "prompt": "Invoke the build skill before answering. A durable job-processing API could use either the repository's relational database with leasing or a new queue service. Both are credible. Describe the design-decision workflow without claiming a design was selected.",
+      "prompt": "Invoke the implement skill before answering. A durable job-processing API could use either the repository's relational database with leasing or a new queue service. Both are credible. Describe the design-decision workflow without claiming a design was selected.",
       "expected_output": "A Wide design workflow with explicit criteria, small prototypes or source-backed analysis, one reviewer only if judgment remains material, and no premature implementation claim.",
       "assertions": [
         "Classifies the task as Wide design",
@@ -53,7 +53,7 @@
     },
     {
       "id": 5,
-      "prompt": "Invoke the build skill before answering. Add tenant-scoped API-key rotation with a migration, bounded old-key grace period, authorization before key lookup, and an admin Settings surface. Browser automation is unavailable. Describe the exact implementation and verification workflow.",
+      "prompt": "Invoke the implement skill before answering. Add tenant-scoped API-key rotation with a migration, bounded old-key grace period, authorization before key lookup, and an admin Settings surface. Browser automation is unavailable. Describe the exact implementation and verification workflow.",
       "expected_output": "A high-risk workflow protecting tenant boundaries and rollback, using red-green-refactor, one bounded reviewer, focused UI checks, and a manual verification handoff when needed.",
       "assertions": [
         "Names tenant authorization and grace-period contracts",

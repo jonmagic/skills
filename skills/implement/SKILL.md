@@ -1,12 +1,12 @@
 ---
-name: build
+name: implement
 description: Use when the user asks to build, implement, finish, or make a plan real from a URL, file path, issue, spec, or repository context. Orchestrates end-to-end implementation with clarification, red-green-refactor, validation, risk-gated review, recovery, and final handoff. Do not use for merely compiling or running a build command.
 license: ISC
 ---
 
-# Build
+# Implement
 
-Build turns a URL, local path, issue, plan, specification, or repository task into a finished, usable project or change. It is a conductor skill: the top-level agent owns context, decisions, synthesis, and user communication while invoking narrower skills, tools, and subagents only when they materially improve the result.
+Implement turns a URL, local path, issue, plan, specification, or repository task into a finished, usable project or change. It is a conductor skill: the top-level agent owns context, decisions, synthesis, and user communication while invoking narrower skills, tools, and subagents only when they materially improve the result.
 
 ## When to Use
 
@@ -132,7 +132,7 @@ When going wide:
 - use one independent challenger when the remaining uncertainty is judgmental
 - use a multi-model adjudication workflow only when the driver and reviewer disagree on a consequential claim that direct verification cannot resolve
 
-### 6. Build with red-green-refactor
+### 6. Implement with red-green-refactor
 
 For each milestone:
 
@@ -199,7 +199,7 @@ Before saying the work is done:
 - provide the smallest useful final answer
 
 ```markdown
-**Built:** <what is ready>
+**Implemented:** <what is ready>
 
 <the meaningful change, relevant validation evidence, and any remaining blocker>
 ```
@@ -209,7 +209,7 @@ Before saying the work is done:
 Use [references/ORCHESTRATION.md](references/ORCHESTRATION.md) for the routing matrix.
 
 - **Clarification:** a decision cannot be safely inferred.
-- **Narrow build:** the path is clear and cheaply verifiable.
+- **Narrow implementation:** the path is clear and cheaply verifiable.
 - **Wide design:** multiple credible designs have different material tradeoffs.
 - **Recovery:** the first pass failed, became brittle, or violated acceptance criteria.
 - **Review hardening:** validated work still carries a material unresolved risk.
@@ -248,11 +248,11 @@ Treat changes to this skill as changes to an executable workflow:
 ## Example Prompts
 
 ```text
-Use build on this plan: /path/to/plan.md
+Use implement on this plan: /path/to/plan.md
 ```
 
 ```text
-Build the feature described in https://github.com/org/repo/issues/123 and get it ready for me to use.
+Implement the feature described in https://github.com/org/repo/issues/123 and get it ready for me to use.
 ```
 
 ```text

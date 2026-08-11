@@ -1,10 +1,10 @@
-# Build behavioral tests
+# Implement behavioral tests
 
 ## Trigger routing
 
 | Prompt | Expected |
 | --- | --- |
-| `Build this feature from the attached spec and finish the implementation.` | Trigger |
+| `Implement this feature from the attached spec and finish the implementation.` | Trigger |
 | `Make this GitHub issue real, including tests and final review.` | Trigger |
 | `Recover this half-finished feature and get it ready to use.` | Trigger |
 | `Run npm run build.` | Do not trigger |
@@ -22,7 +22,7 @@ Add a small optional CLI flag using the repository's existing option parser, upd
 
 Expected behavior:
 
-- classify as Narrow build
+- classify as Narrow implementation
 - use direct tools and the existing parser
 - add or identify a failing focused check before implementation
 - verify the unit test and help output
