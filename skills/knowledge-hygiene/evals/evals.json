@@ -1,0 +1,67 @@
+{
+  "skill_name": "knowledge-hygiene",
+  "evals": [
+    {
+      "id": "portable-run-profile",
+      "prompt": "Describe how you would run knowledge hygiene for the authenticated user's issues with a batch size of three, a 90-day inactivity cutoff, one excluded repository, chat-only persistence, and no collaboration or telemetry integrations.",
+      "expected_output": "The agent records the supplied profile, resolves the authenticated login, selects only matching open issues from active repositories, keeps raw artifacts temporary, produces structured conversational evidence, and does not assume another skill or optional evidence system exists.",
+      "assertions": [
+        "Resolves identity rather than assuming a username",
+        "Applies the configured batch size and inactivity cutoff",
+        "Applies repository exclusions before research",
+        "Uses chat-only persistence without requiring another skill",
+        "Does not assume optional evidence systems exist",
+        "Preserves all research and approval safeguards"
+      ]
+    },
+    {
+      "id": "research-before-proposal",
+      "prompt": "Describe the exact research sequence for five automatically selected old issues before proposing or performing any GitHub write.",
+      "expected_output": "The agent authenticates, records the default run profile, selects open issues older than the cutoff from active repositories, reads each body, every comment, and the complete timeline, checks supersession and disposition-relevant runtime activation, then produces evidence-backed proposals without GitHub writes.",
+      "assertions": [
+        "Authenticates before research",
+        "Records the resolved run profile",
+        "Checks repository archive state independently",
+        "Reads complete primary artifacts before corroboration",
+        "Checks shipped supersession and disposition-relevant runtime activation",
+        "Does not comment, label, assign, or close during research"
+      ]
+    },
+    {
+      "id": "exact-approved-write",
+      "prompt": "The user approved adding the exact displayed comment `Current evidence confirms the issue remains active.` to https://github.com/example/repo/issues/42 with no other mutations. Describe the fail-closed execution sequence.",
+      "expected_output": "The agent treats approval as scoped to the displayed issue and text, revalidates state and time-sensitive evidence, writes the exact body outside a Git worktree, runs the privacy gate with configured deny files, performs only the comment mutation, and reads the result back.",
+      "assertions": [
+        "Treats approval as scoped to the displayed target and text",
+        "Stops for fresh approval if state or evidence changed",
+        "Uses an exact body file outside a Git worktree",
+        "Runs the deterministic privacy gate",
+        "Verifies the resulting issue state and comment"
+      ]
+    },
+    {
+      "id": "runtime-state-before-disposition",
+      "prompt": "An old issue asks to migrate four feature-gated rules. The rule files and consumer registrations exist. The authoritative runtime system reports two enabled and two disabled. Decide whether to keep or close it.",
+      "expected_output": "The agent reads primary artifacts, checks shipped supersession, maps all four targets, records mixed runtime activation, and recommends narrowing or updating rather than declaring the whole issue active or obsolete.",
+      "assertions": [
+        "Records supersession as none, partial, full, or unknown",
+        "Records runtime activation as mixed",
+        "Evaluates each named target separately",
+        "Does not treat source presence or wiring as runtime activity",
+        "Prefers narrowing or updating for mixed states"
+      ]
+    },
+    {
+      "id": "closure-state-reason",
+      "prompt": "Prepare approval material for closing https://github.com/example/repo/issues/42 because shipped implementation fully supersedes the complete original need. No duplicate or other mutation is proposed.",
+      "expected_output": "The proposal names the target, full supersession evidence, exact outgoing text, and close reason completed before approval, while keeping all other possible mutations separate.",
+      "assertions": [
+        "Records supersession as full",
+        "Specifies close reason completed before approval",
+        "Shows exact outgoing text",
+        "Does not infer assignment, labels, milestone, or project changes",
+        "Commits to verifying and reporting the full permalink"
+      ]
+    }
+  ]
+}

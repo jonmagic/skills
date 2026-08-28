@@ -1,0 +1,78 @@
+#!/usr/bin/env ruby
+
+require "json"
+require "open3"
+require "optparse"
+
+options = {deny_files: []}
+
+OptionParser.new do |parser|
+  parser.banner = "Usage: privacy-gate --body FILE --target OWNER/REPO [--deny-file FILE ...]"
+  parser.on("-b", "--body FILE", "Exact outgoing body file") { |value| options[:body] = value }
+  parser.on("-t", "--target OWNER/REPO", "Target GitHub repository") { |value| options[:target] = value }
+  parser.on("-d", "--deny-file FILE", "File of additional forbidden literal markers") { |value| options[:deny_files] << value }
+  parser.on("-h", "--help", "Show help") do
+    puts parser
+    exit 0
+  end
+end.parse!
+
+abort "Missing --body FILE" unless options[:body]
+abort "Missing --target OWNER/REPO" unless options[:target]
+abort "Invalid target; expected OWNER/REPO" unless options[:target].match?(%r{\A[^/]+/[^/]+\z})
+abort "Body file does not exist: #{options[:body]}" unless File.file?(options[:body])
+
+options[:deny_files].each do |path|
+  abort "Deny file does not exist: #{path}" unless File.file?(path)
+end
+
+body = File.read(options[:body])
+built_in_patterns = [
+  %r{~/[^\s`"')\]>]+},
+  %r{/(?:Users|home)/[^/\s`"')\]>]+(?:/[^\s`"')\]>]*)?},
+  %r{[A-Za-z]:\\Users\\[^\\\s`"')\]>]+(?:\\[^\s`"')\]>]*)?},
+  %r{\bfile://[^\s]+}i,
+  /\[\[[^\]]+\]\]/
+]
+
+if built_in_patterns.any? { |pattern| body.match?(pattern) }
+  abort "Privacy gate blocked a local workspace or note reference"
+end
+
+deny_markers = options[:deny_files].flat_map do |path|
+  File.readlines(path, chomp: true).map(&:strip).reject { |line| line.empty? || line.start_with?("#") }
+end.uniq
+
+body_folded = body.downcase
+matched_marker = deny_markers.find { |marker| body_folded.include?(marker.downcase) }
+abort "Privacy gate blocked a configured private marker" if matched_marker
+
+def gh_repo(repo)
+  stdout, stderr, status = Open3.capture3("gh", "repo", "view", repo, "--json", "isPrivate,visibility")
+  unless status.success?
+    abort "Cannot classify GitHub path #{repo}; it may be a private repository or a non-repository URL: #{stderr.strip}"
+  end
+  JSON.parse(stdout)
+rescue JSON::ParserError => error
+  abort "Invalid repository visibility JSON for #{repo}: #{error.message}"
+end
+
+target_data = gh_repo(options[:target])
+
+unless target_data["isPrivate"]
+  non_repository_prefixes = %w[apps collections customer-stories enterprise events features marketplace orgs pricing readme search security settings sponsors topics]
+  url_repos = body.scan(
+    %r{(?<![\w.-])(?:https?://)?(?:(?:www\.)?github\.com|raw\.githubusercontent\.com)/([\w.-]+/[\w.-]+)}i
+  ).flatten.map { |repo| repo.sub(/[.,;:)\]]+\z/, "") }
+  url_repos.reject! { |repo| non_repository_prefixes.include?(repo.split("/", 2).first.downcase) }
+  shorthand_repos = body.scan(%r{(?<![\w.-])([\w.-]+/[\w.-]+)#\d+\b}).flatten
+  referenced_repos = (url_repos + shorthand_repos).uniq
+  referenced_repos.reject! { |repo| repo.casecmp?(options[:target]) }
+
+  referenced_repos.each do |repo|
+    data = gh_repo(repo)
+    abort "Privacy gate blocked private repository reference #{repo} from a public target" if data["isPrivate"]
+  end
+end
+
+puts "Privacy gate passed for #{options[:target]}"

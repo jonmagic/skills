@@ -1,0 +1,254 @@
+#!/usr/bin/env ruby
+
+require "fileutils"
+require "json"
+require "open3"
+require "optparse"
+require "pathname"
+require "shellwords"
+require "time"
+
+options = {}
+
+OptionParser.new do |parser|
+  parser.banner = "Usage: fetch-primary-artifacts --output DIR OWNER/REPO#NUMBER [...]"
+  parser.on("-o", "--output DIR", "Artifact output directory outside a Git worktree") { |value| options[:output] = value }
+  parser.on("-h", "--help", "Show help") do
+    puts parser
+    exit 0
+  end
+end.parse!
+
+abort "Missing --output DIR" unless options[:output]
+abort "Provide at least one OWNER/REPO#NUMBER" if ARGV.empty?
+
+def run_command(command)
+  stdout, stderr, status = Open3.capture3(*command)
+  [stdout, stderr, status.exitstatus]
+end
+
+def command_text(command)
+  Shellwords.join(command)
+end
+
+def existing_ancestor(path)
+  cursor = path
+  cursor = cursor.parent until cursor.exist? || cursor.root?
+  cursor
+end
+
+def canonical_path(path)
+  ancestor = existing_ancestor(path)
+  Pathname.new(File.realpath(ancestor)).join(path.relative_path_from(ancestor)).cleanpath
+end
+
+def git_root_for(path)
+  ancestor = existing_ancestor(path)
+  stdout, _stderr, status = Open3.capture3("git", "-C", ancestor.to_s, "rev-parse", "--show-toplevel")
+  return nil unless status.success?
+
+  Pathname.new(File.realpath(stdout.strip))
+end
+
+def write_audit(output_dir, audit)
+  File.write(output_dir.join("audit.json"), JSON.pretty_generate(audit) + "\n")
+  rows = [["status", "command"]]
+  rows << [audit.dig("authentication", "status"), audit.dig("authentication", "command")]
+  audit["issues"].each do |issue|
+    issue.fetch("commands", []).each { |entry| rows << [entry["status"], entry["command"]] }
+  end
+  File.write(output_dir.join("audit.tsv"), rows.map { |row| row.join("\t") }.join("\n") + "\n")
+end
+
+output_dir = canonical_path(Pathname.new(File.expand_path(options[:output])))
+git_root = git_root_for(output_dir)
+
+if git_root && (output_dir == git_root || output_dir.to_s.start_with?("#{git_root}#{File::SEPARATOR}"))
+  abort "Refusing to write raw artifacts inside Git worktree: #{git_root}"
+end
+
+if output_dir.exist? && output_dir.children.any?
+  abort "Output directory must be empty: #{output_dir}"
+end
+
+FileUtils.mkdir_p(output_dir)
+
+audit = {
+  "generated_at" => Time.now.utc.iso8601,
+  "output_directory" => output_dir.to_s,
+  "authentication" => {},
+  "issues" => []
+}
+
+auth_command = ["gh", "auth", "status"]
+_auth_stdout, auth_stderr, auth_exit = run_command(auth_command)
+audit["authentication"] = {
+  "command" => command_text(auth_command),
+  "status" => auth_exit.zero? ? "success" : "failure",
+  "exit_code" => auth_exit
+}
+
+unless auth_exit.zero?
+  write_audit(output_dir, audit)
+  warn auth_stderr
+  abort "GitHub authentication failed"
+end
+
+archived_found = false
+repo_fields = "isArchived,nameWithOwner,url,visibility,isPrivate,viewerPermission,hasIssuesEnabled"
+core_issue_fields = [
+  "number", "title", "state", "stateReason", "author", "createdAt", "updatedAt", "closedAt", "body",
+  "comments", "labels", "assignees", "milestone", "projectItems", "closedByPullRequestsReferences",
+  "isPinned", "url"
+]
+relationship_issue_fields = ["parent", "subIssues", "blockedBy", "blocking"]
+extended_issue_fields = (core_issue_fields + relationship_issue_fields).join(",")
+
+ARGV.each do |spec|
+  match = spec.match(%r{\A([^/#\s]+/[^/#\s]+)#(\d+)\z})
+  unless match
+    write_audit(output_dir, audit)
+    abort "Invalid issue spec #{spec.inspect}; expected OWNER/REPO#NUMBER"
+  end
+
+  repo = match[1]
+  number = match[2]
+  slug = "#{repo.tr("/", "-")}-#{number}"
+  issue_audit = {"spec" => spec, "repository" => repo, "number" => number.to_i, "commands" => []}
+  audit["issues"] << issue_audit
+
+  repo_command = ["gh", "repo", "view", repo, "--json", repo_fields]
+  repo_stdout, repo_stderr, repo_exit = run_command(repo_command)
+  issue_audit["commands"] << {
+    "command" => command_text(repo_command),
+    "status" => repo_exit.zero? ? "success" : "failure",
+    "exit_code" => repo_exit
+  }
+
+  unless repo_exit.zero?
+    write_audit(output_dir, audit)
+    warn repo_stderr
+    abort "Repository lookup failed for #{repo}"
+  end
+
+  begin
+    repo_data = JSON.parse(repo_stdout)
+  rescue JSON::ParserError => error
+    write_audit(output_dir, audit)
+    abort "Invalid repository JSON for #{repo}: #{error.message}"
+  end
+
+  File.write(output_dir.join("#{slug}-repository.json"), JSON.pretty_generate(repo_data) + "\n")
+
+  if repo_data["isArchived"]
+    issue_audit["selection_status"] = "excluded_archived"
+    archived_found = true
+    next
+  end
+
+  unless repo_data["hasIssuesEnabled"]
+    write_audit(output_dir, audit)
+    abort "Issues are disabled for #{repo}"
+  end
+
+  issue_audit["selection_status"] = "active"
+
+  target_command = ["gh", "api", "repos/#{repo}/issues/#{number}"]
+  target_stdout, target_stderr, target_exit = run_command(target_command)
+  issue_audit["commands"] << {
+    "command" => command_text(target_command),
+    "status" => target_exit.zero? ? "success" : "failure",
+    "exit_code" => target_exit
+  }
+
+  unless target_exit.zero?
+    write_audit(output_dir, audit)
+    warn target_stderr
+    abort "Issue target lookup failed for #{spec}"
+  end
+
+  begin
+    target_data = JSON.parse(target_stdout)
+  rescue JSON::ParserError => error
+    write_audit(output_dir, audit)
+    abort "Invalid issue target JSON for #{spec}: #{error.message}"
+  end
+
+  if target_data.key?("pull_request")
+    issue_audit["selection_status"] = "rejected_pull_request"
+    write_audit(output_dir, audit)
+    abort "Target #{spec} is a pull request, not an issue"
+  end
+
+  issue_command = ["gh", "issue", "view", number, "--repo", repo, "--json", extended_issue_fields]
+  issue_stdout, issue_stderr, issue_exit = run_command(issue_command)
+  issue_audit["commands"] << {
+    "command" => command_text(issue_command),
+    "status" => issue_exit.zero? ? "success" : "failure",
+    "exit_code" => issue_exit
+  }
+
+  unless issue_exit.zero?
+    fallback_command = ["gh", "issue", "view", number, "--repo", repo, "--json", core_issue_fields.join(",")]
+    issue_stdout, fallback_stderr, fallback_exit = run_command(fallback_command)
+    issue_audit["commands"] << {
+      "command" => command_text(fallback_command),
+      "status" => fallback_exit.zero? ? "success" : "failure",
+      "exit_code" => fallback_exit
+    }
+
+    if fallback_exit.zero?
+      issue_audit["relationship_fields_status"] = "unavailable"
+      issue_audit["relationship_fields"] = relationship_issue_fields
+    else
+      write_audit(output_dir, audit)
+      warn issue_stderr
+      warn fallback_stderr
+      abort "Primary issue retrieval failed for #{spec}"
+    end
+  else
+    issue_audit["relationship_fields_status"] = "captured"
+  end
+
+  timeline_command = [
+    "gh", "api", "--paginate", "--slurp", "-H", "Accept: application/vnd.github+json",
+    "repos/#{repo}/issues/#{number}/timeline"
+  ]
+  timeline_stdout, timeline_stderr, timeline_exit = run_command(timeline_command)
+  issue_audit["commands"] << {
+    "command" => command_text(timeline_command),
+    "status" => timeline_exit.zero? ? "success" : "failure",
+    "exit_code" => timeline_exit
+  }
+
+  unless timeline_exit.zero?
+    write_audit(output_dir, audit)
+    warn timeline_stderr
+    abort "Primary timeline retrieval failed for #{spec}"
+  end
+
+  begin
+    issue_data = JSON.parse(issue_stdout)
+    timeline_pages = JSON.parse(timeline_stdout)
+    unless timeline_pages.is_a?(Array) && timeline_pages.all? { |page| page.is_a?(Array) }
+      raise JSON::ParserError, "timeline response is not an array of pages"
+    end
+    timeline_data = timeline_pages.flatten(1)
+  rescue JSON::ParserError => error
+    write_audit(output_dir, audit)
+    abort "Invalid primary-artifact JSON for #{spec}: #{error.message}"
+  end
+
+  File.write(output_dir.join("#{slug}-issue.json"), JSON.pretty_generate(issue_data) + "\n")
+  File.write(output_dir.join("#{slug}-timeline.json"), JSON.pretty_generate(timeline_data) + "\n")
+  issue_audit["timeline_event_count"] = timeline_data.length
+end
+
+write_audit(output_dir, audit)
+
+if archived_found
+  warn "One or more repositories are archived; replace those candidates before research"
+  exit 2
+end
+
+puts "Fetched primary artifacts for #{audit["issues"].length} issue(s) into #{output_dir}"

@@ -1,0 +1,32 @@
+[
+  {
+    "query": "Run a knowledge hygiene batch over my old GitHub issues.",
+    "should_trigger": true,
+    "reason": "The request asks for the evidence-first issue hygiene workflow."
+  },
+  {
+    "query": "Help me decide whether to keep, update, connect, consolidate, or close these lingering issues.",
+    "should_trigger": true,
+    "reason": "The request needs defensible issue dispositions and conversational approval."
+  },
+  {
+    "query": "Continue the knowledge hygiene approval loop.",
+    "should_trigger": true,
+    "reason": "The request resumes the item-by-item approval workflow."
+  },
+  {
+    "query": "Triage the issues opened this week for sprint planning.",
+    "should_trigger": false,
+    "reason": "Ordinary current issue triage is outside the hygiene workflow."
+  },
+  {
+    "query": "Create an issue to track this follow-up.",
+    "should_trigger": false,
+    "reason": "The skill does not create new issues."
+  },
+  {
+    "query": "Close every issue with no comments in the last year.",
+    "should_trigger": false,
+    "reason": "Bulk stale automation is explicitly out of scope."
+  }
+]
