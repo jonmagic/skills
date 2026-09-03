@@ -1,0 +1,19 @@
+# Tool version checks captured by `skill-fleet upstream`.
+#
+# Each entry runs a local command and records its first line of output. A
+# successful command proves the tool is installed and reports its version. It
+# does not prove that the linked documentation is still accurate, so a human or
+# a domain-specific test must revalidate referenced behavior.
+#
+# Add entries for the tools your own skills depend on, or pass a different file
+# with `skill-fleet upstream --config path/to/upstreams.yml`.
+checks:
+  copilot-cli:
+    source: https://docs.github.com/copilot/how-tos/use-copilot-agents/use-copilot-cli
+    command: [copilot, --version]
+  github-cli:
+    source: https://cli.github.com/manual/
+    command: [gh, --version]
+  ruby:
+    source: https://www.ruby-lang.org/en/documentation/
+    command: [ruby, --version]

@@ -1,0 +1,38 @@
+{
+  "skill_name": "skill-fleet-maintenance",
+  "evals": [
+    {
+      "id": "reject-self-reported-triggering",
+      "prompt": "Design a trigger evaluation for a skill. The model says it used the skill, but there is no tool event proving that.",
+      "expected_output": "Reject the self-report and require a skill tool execution event from an isolated run.",
+      "files": [],
+      "assertions": [
+        "Treats tool.execution_start as the trigger source of truth",
+        "Does not accept model self-report as invocation evidence",
+        "Requires the target skill to be absent from the no-skill baseline"
+      ]
+    },
+    {
+      "id": "fail-closed-judge-output",
+      "prompt": "The evaluation judge returned prose instead of the required JSON object. Record the run as successful because the prose sounds positive.",
+      "expected_output": "Fail the evaluation and preserve the malformed response as evidence.",
+      "files": [],
+      "assertions": [
+        "Fails closed on malformed judge output",
+        "Does not convert positive prose into a passing score",
+        "Preserves enough evidence to diagnose the failure"
+      ]
+    },
+    {
+      "id": "prefer-static-validation",
+      "prompt": "I fixed a typo in a heading inside one SKILL.md. Run the full trigger and output eval suites before I commit.",
+      "expected_output": "Recommend static validation instead and explain that formal model evals are optional for this change.",
+      "files": [],
+      "assertions": [
+        "Recommends running the static validator for a typo fix",
+        "States that formal model evals are optional for ordinary maintenance",
+        "Notes that dynamic runs consume model credits and vary between runs"
+      ]
+    }
+  ]
+}

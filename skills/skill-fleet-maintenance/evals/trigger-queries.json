@@ -1,0 +1,32 @@
+[
+  {
+    "query": "Run the static validator across my agent skill fleet and list broken references.",
+    "should_trigger": true,
+    "reason": "Explicit fleet-wide structural validation."
+  },
+  {
+    "query": "Compare the semantic-commit skill with and without its instructions.",
+    "should_trigger": true,
+    "reason": "Explicit with-skill versus without-skill evaluation."
+  },
+  {
+    "query": "Which skills have overdue review-by metadata?",
+    "should_trigger": true,
+    "reason": "Fleet freshness maintenance."
+  },
+  {
+    "query": "Create a D2 sequence diagram for this API.",
+    "should_trigger": false,
+    "reason": "This is a diagram task, not skill fleet maintenance."
+  },
+  {
+    "query": "Search Slack for the deployment discussion.",
+    "should_trigger": false,
+    "reason": "This belongs to the Slack skill."
+  },
+  {
+    "query": "Fix a typo in this one Markdown file.",
+    "should_trigger": false,
+    "reason": "A bounded edit does not require fleet validation."
+  }
+]
