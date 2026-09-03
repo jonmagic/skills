@@ -232,3 +232,35 @@ Review Fixture D in examples/closure-review-fixtures.md. Decide whether the addi
 - Distinguishes safe to merge from safe to enable.
 - Returns `Looks ready` or `Comment-only`, not `Needs changes before merge`,
   unless additional evidence makes the live-action path reachable now.
+
+## Test: Inert foundation in a dependent PR program
+
+**Prompt:**
+```
+Review this supplied change program without repository lookup. PR A targets the default branch and adds an inert state model. PR B targets A and adds partial enforcement. PR C targets B and activates the behavior. A required public-serving change has no linked PR in its repository. PR D targets C even though it only depends on A. The current target is PR A. Explain merge readiness, activation readiness, sequencing, and the stack evidence that must be recorded. Do not post anything.
+```
+
+**Expected Behavior:**
+
+- Classifies the relationship as a dependent branch chain or linked change program without assuming native stack guarantees.
+- Reviews the current layer, cumulative program, and intermediate merge and deployment states separately.
+- Allows PR A to merge when its own inert contract is sound while blocking activation at PR C.
+- Assigns the missing serving behavior to a cross-repository prerequisite instead of treating it as a defect in PR A.
+- Recommends restacking PR D directly on PR A.
+- Records current head and parent SHAs, explicit diff bases, activation ownership, finding ownership, and resolved-upstack status.
+- Uses patch-series comparison after restacking and avoids duplicating one program-wide finding across every PR.
+
+## Test: Recipient did not share the private review conversation
+
+**Prompt:**
+```
+We spent an hour tracing the retry path and corrected our first theory. The PR author has only seen the PR and its tests. Draft the blocking review comment.
+```
+
+**Expected Behavior:**
+
+- Uses the private investigation to improve accuracy without narrating it to the recipient.
+- States the necessary execution-path setup directly.
+- Does not say "as we discussed," "after digging further," or otherwise imply the author shared the private conversation.
+- Avoids dangling references and false-inclusive "we."
+- Preserves the concrete consequence and recommended next step.

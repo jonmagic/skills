@@ -44,6 +44,8 @@ gh skill install jonmagic/skills principal-engineer-review --scope user
 - Uses progressive disclosure instead of dumping a repository tour
 - Supports conversational deep dives into paths, terms, tests, alternatives, and findings
 - Matches review depth to behavior and blast radius instead of the changed-file list
+- Reviews stacked and dependent PRs through layer, cumulative, and intermediate-state views
+- Distinguishes merge readiness from program activation and assigns findings to the layer that owns the fix
 - Traces high-risk changes through consumers of the changed invariant or implicit contract
 - Verifies rollout-critical metric names, tags, logs, dashboards, and alerts as compatibility surfaces
 - Prioritizes material findings over style or formatting nits
@@ -51,6 +53,8 @@ gh skill install jonmagic/skills principal-engineer-review --scope user
 - Separates blocking review feedback from non-blocking follow-up
 - Calls out missing reasoning when reviewers cannot evaluate safety, rollback, validation, or scope from the PR alone
 - Uses an optional design lens for architecture, API, platform, and service-boundary reviews without turning ordinary PR review into a law catalog
+- Produces a structured evidence handoff that preserves finding identity, ownership, reachability, and review freshness
+- Keeps private review deliberation out of recipient-facing comments unless the visible thread establishes that context
 - Drafts concise review comments on request and requires exact approval before posting
 - Stops after the review package in `next` mode so you can inspect the findings before working on the response
 

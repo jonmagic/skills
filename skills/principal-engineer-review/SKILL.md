@@ -213,7 +213,17 @@ Translate that evidence into a compact reviewer orientation:
 - the main execution path or data flow
 - the invariant or contract most likely to matter
 
-### 2. Inspect the surrounding code
+### 2. Discover stacked or dependent change programs
+
+Do not review a PR as an isolated delivery unit when its base branch, body, linked artifacts, or repository evidence shows that it is one layer of a larger change program.
+
+Load `references/stacked-change-programs.md` when stack metadata, a non-default base branch, linked dependent PRs, or cross-repository prerequisites are present. Its contract requires a dependency and activation graph, separate layer/cumulative/intermediate-state reviews, current head and parent SHAs, an explicit diff basis, finding ownership, and patch-series comparison after restacking.
+
+Set `changeProgram.relationship` to exactly `native-stack`, `dependent-branch-chain`, or `linked-change-program`; a sequence where each PR branch targets the preceding PR branch is always `dependent-branch-chain`, even when cross-repository prerequisites also exist.
+
+Do not reject an explicit inert foundation solely because it does not activate the final behavior by itself. Do not approve an activation or keystone layer merely because a later or unlinked PR is expected to complete a required safety property.
+
+### 3. Inspect the surrounding code
 
 Read enough nearby code to avoid reviewing the diff in isolation:
 
@@ -225,7 +235,7 @@ Read enough nearby code to avoid reviewing the diff in isolation:
 
 Prefer existing primitives over new ones unless the diff shows why they do not fit.
 
-### 3. Match review scope to the changed behavior
+### 4. Match review scope to the changed behavior
 
 Review scope follows behavior and blast radius, not the files changed.
 
@@ -246,7 +256,7 @@ limit, or implicit contract, then enumerate and inspect its consumers. Verify
 whole-codebase claims from subagents or review tools directly; do not forward or
 trust an unsupported "no other hazards remain" conclusion.
 
-### 4. Separate intent, merge reachability, and activation risk
+### 5. Separate intent, merge reachability, and activation risk
 
 Before deciding whether a behavior is a bug or a blocker:
 
@@ -275,7 +285,7 @@ Preserve this distinction when synthesizing tool or subagent findings. If the
 evidence says "safe to merge, unsafe to enable," do not collapse that into a
 merge blocker.
 
-### 5. Evaluate material risk
+### 6. Evaluate material risk
 
 Review for these concerns in priority order:
 
@@ -288,7 +298,7 @@ Review for these concerns in priority order:
 7. Validation: tests or manual checks prove the changed behavior rather than a loose proxy.
 8. Visible reasoning: the PR or handoff explains enough for reviewers to evaluate why, approach, validation, uncertainty, and rollback.
 
-### 6. Triage findings
+### 7. Triage findings
 
 Only raise comments that meet at least one of these bars:
 
@@ -303,7 +313,7 @@ Blocking comments should generally be limited to correctness, security/privacy, 
 
 Do not leave "consider..." comments unless the consideration has a concrete consequence. If the issue is real, say what can fail and what simpler or safer shape would address it.
 
-### 7. Check the visible reasoning
+### 8. Check the visible reasoning
 
 Missing reasoning is not automatically blocking. It becomes blocking when reviewers cannot evaluate correctness, safety, rollback, or scope without reconstructing the author's thought process from the diff.
 
@@ -317,7 +327,7 @@ Ask for the smallest useful explanation:
 
 Good feedback makes hidden thinking visible without creating process theater. Prefer concrete asks such as "Please add the browser behavior you validated or a focused test for popup blocking" over generic asks like "add more context."
 
-### 8. Preserve durable context when a miss is likely to recur
+### 9. Preserve durable context when a miss is likely to recur
 
 When a review surfaces repeated misses or hidden organizational knowledge, recommend the smallest durable improvement:
 
@@ -329,9 +339,22 @@ When a review surfaces repeated misses or hidden organizational knowledge, recom
 
 Do not turn every review finding into process. Only propose durable context when the same miss is likely to recur or the missing context is important enough that future reviewers should not rediscover it.
 
+## Structured Review Handoff
+
+Every completed review package with findings must include a compact structured handoff after the human-readable analysis. Load [references/structured-review-handoff.md](references/structured-review-handoff.md) and follow its schema and contract. The handoff preserves stable finding identity, blocking status, verified facts versus interpretation, placement guidance, change-program context, and a suggested disposition that never authorizes posting.
+
 ## Drafting and Posting Review Feedback
 
 Return findings in chat. Do not post GitHub review comments, submit approvals, request changes, resolve threads, or mutate a PR directly from this skill.
+
+### Recipient Knowledge Boundary
+
+Private review work may inform a draft but must never be represented as shared history with the recipient. Before drafting, separate:
+
+- **Recipient-visible context:** the target PR or thread, linked public artifacts, and facts explicitly identified as already shared.
+- **Working-only context:** private agent discussion, tool output, internal review packages, discarded interpretations, and intermediate drafts.
+
+Write the comment so it stands alone for someone who sees only the recipient-visible context. State necessary setup directly; remove dangling references such as "that issue," false-inclusive "we," and correction narration such as "after digging further" unless the visible thread establishes them. Preserve the conclusion without narrating the private path used to reach it.
 
 When the user asks for draft review comments:
 
@@ -352,7 +375,7 @@ When the user explicitly asks to post a review:
 1. Show or identify the exact approved comments and body.
 2. Require the full repository-qualified PR URL and one disposition: `comment`, `approve`, or `request changes`.
 3. Confirm the PR is still open and its head SHA matches the revision reviewed. Refresh the relevant context and repeat approval if it changed.
-4. Scan the exact outgoing text for private local paths, private note references, credentials, unsupported claims, and non-qualified GitHub links.
+4. Remove the internal structured handoff, then scan the exact outgoing text for private local paths, private note references, credentials, unsupported claims, non-qualified GitHub links, and language that falsely implies the recipient shared the private review conversation.
 5. Post only after explicit approval of the exact text, target, and disposition, then read back the submitted review state and permalink.
 
 Fail closed if the target, text, disposition, freshness, or write capability is unavailable.
@@ -363,7 +386,7 @@ In `next` queue mode, lead with the selected PR and selection reason. Include th
 
 Use this progressive-disclosure shape. Keep each section proportional; omit empty sections:
 
-```markdown
+````markdown
 **What this PR is doing**
 This changes how replacement jobs are counted during retry cleanup. Today normal polling and real processing failures share one counter; the PR begins separating those behaviors.
 
@@ -386,9 +409,19 @@ The change keeps the data model unchanged and avoids introducing a worker for a 
 **Open questions**
 Can new polling work enter the shared counter while cleanup is running?
 
+**Review handoff**
+<details>
+<summary>Internal structured handoff - do not paste into GitHub</summary>
+
+```json
+{"target":{"url":"https://github.com/OWNER/REPO/pull/123","headSha":"abc123"},"changeProgram":{"relationship":"standalone","layerPosition":null,"parentUrl":null,"parentSha":null,"diffBasis":"default-branch...abc123","activationOwner":null,"crossRepositoryPrerequisites":[]},"decision":"Needs changes before merge","suggestedDisposition":"request_changes","findings":[{"findingId":"F1","blocking":true,"confidence":"high","programStatus":"request_changes_here","owningTarget":"https://github.com/OWNER/REPO/pull/123","reachability":"merge-time","resolvedUpstack":false,"path":"jobs/retry_cleanup.rb","line":123,"verifiedFact":"Cleanup runs before the counters are separated.","interpretation":"Normal polling can continue consuming the shared budget during cleanup.","uncertainty":null,"consequence":"Fresh work can cross the retry limit while the backlog drains.","recommendedNextStep":"Separate counters before cleanup or pause new accounting during migration.","feedbackPlacement":"inline"},{"findingId":"F2","blocking":false,"confidence":"medium","programStatus":"follow_up_here","owningTarget":"https://github.com/OWNER/REPO/pull/123","reachability":"follow-up","resolvedUpstack":false,"path":"jobs/retry_cleanup.rb","line":45,"verifiedFact":"The change adds retry-key normalization alongside an existing helper.","interpretation":"The duplicate normalization may drift from the existing key format.","uncertainty":"The new key format may be intentionally different.","consequence":"Future changes may update one normalization path but not the other.","recommendedNextStep":"Confirm whether the formats differ intentionally; otherwise reuse the existing helper.","feedbackPlacement":"inline"}],"validation":{"checks":[],"missing":["Focused retry cleanup tests were not run in this example."]}}
+```
+
+</details>
+
 **Explore with me**
 I can trace the retry path, explain how the counter is persisted, compare the proposed orderings, inspect the focused tests, or revisit any finding.
-```
+````
 
 For a small or familiar change, collapse or omit the orientation and context map. Never pad the response to fill the template. The ordering is an entry-point decision: unfamiliar reviewers start with context; familiar reviewers jump directly to judgment.
 
@@ -418,7 +451,9 @@ For high-risk reviews, include the concise `Closure evidence` block from
 - Select the next open, non-draft, not-yet-reviewed GitHub review request in read-only `next` mode, prioritizing direct requests over team requests.
 - Reuse built-in review tooling, validation tools, and PR-management skills instead of duplicating them.
 - Distinguish blocking findings from non-blocking follow-up.
+- Review dependent PRs as one change program without losing layer ownership or intermediate-state safety.
 - Draft concise, evidence-based review comments when asked.
+- Produce a structured, disposition-aware handoff that preserves finding identity for downstream drafting.
 - Identify durable context improvements when a miss is likely to recur.
 
 **Will Not:**

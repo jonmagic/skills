@@ -197,6 +197,59 @@
         "Requires explicit approval of the request-changes disposition",
         "Preserves head-SHA freshness and external-text privacy validation before any write"
       ]
+    },
+    {
+      "id": 15,
+      "prompt": "Using only this supplied evidence, produce the completed review package and stop before drafting feedback. Target: https://github.com/example/app/pull/42, head abc123. Localized authorization flaw: app/controllers/jobs_controller.rb line 42 returns raw job arguments to every caller authenticated by a shared HMAC; repository policy says this endpoint may expose only job ID and readiness; tests prove the raw payload response. Cross-cutting observability concern: the new controller, worker, and client paths emit no metric distinguishing authorization rejection from queue lookup failure; this is non-blocking because existing logs still identify failures. Validation performed: focused tests passed. No external write.",
+      "expected_output": "The review includes the normal human-readable package plus a structured handoff with stable finding identities, blocking status, confidence, evidence separated from interpretation, placement guidance, and a non-authorizing disposition suggestion.",
+      "files": ["SKILL.md", "references/structured-review-handoff.md"],
+      "assertions": [
+        "Includes one of the four allowed review decisions",
+        "Includes a structured handoff after the human-readable analysis",
+        "Assigns a stable findingId to each finding",
+        "Marks the authorization flaw blocking and the observability concern non-blocking",
+        "Separates verifiedFact, interpretation, uncertainty, consequence, and recommendedNextStep",
+        "Uses inline placement only for the localized finding with a verified path and line",
+        "Uses summary placement for the cross-cutting finding",
+        "Includes a suggestedDisposition that is explicitly not posting authorization",
+        "Records the focused tests as passed without inventing additional validation",
+        "Treats the structured handoff as internal coordination data rather than recipient-facing text",
+        "Does not draft polished review comments or mutate GitHub"
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "Use principal-engineer-review on this fully supplied change program; no repository lookup is needed. PR A is https://github.com/example/app/pull/1, targets main at SHA 0000, has head SHA aaaa, and adds an inert repository-scoped moderation state model. PR B is https://github.com/example/app/pull/2, targets PR A at SHA aaaa, has head SHA bbbb, and adds build and private-auth enforcement. PR C is https://github.com/example/app/pull/3, targets PR B at SHA bbbb, has head SHA cccc, and adds the operator action that writes the state. A separate public-serving repository must reject the state before the promised hard takedown is complete, but no linked PR exists there. PR D is https://github.com/example/app/pull/4, targets PR C at SHA cccc, has head SHA dddd, and is a read-only indicator even though it only depends on PR A. The current review target is PR A. Produce the completed review package and structured handoff. Explain whether PR A can merge, whether the program can activate, how PR D should be sequenced, and what stack evidence must be recorded. Do not post anything.",
+      "expected_output": "A stack-aware review that permits the sound inert foundation, blocks program activation on the missing public-serving prerequisite, identifies the incorrectly sequenced indicator, and records the dependency and activation graph without treating the dependent branch chain as an atomic native stack.",
+      "files": ["SKILL.md", "references/stacked-change-programs.md", "references/structured-review-handoff.md"],
+      "assertions": [
+        "Sets changeProgram.relationship to dependent-branch-chain or linked-change-program rather than inventing another label or assuming native stack guarantees",
+        "Reviews the layer delta, cumulative program result, and intermediate merge or deployment states separately",
+        "Does not reject PR A solely because the inert foundation does not deliver the final takedown by itself",
+        "Identifies PR C as the activation or keystone layer and blocks activation until public serving enforces the state",
+        "Assigns the missing public-serving behavior as a cross-repository prerequisite rather than a defect owned by PR A",
+        "Recommends that PR D depend directly on PR A because it does not require PR B or PR C",
+        "Requires current head and parent SHAs plus an explicit diff basis so review freshness survives restacking",
+        "Includes changeProgram evidence and finding fields including findingId, programStatus, owningTarget, reachability, and resolvedUpstack",
+        "Represents the missing public-serving change as a crossRepositoryPrerequisite whose targetUrl may be null",
+        "Reports unperformed validation in validation.missing instead of leaving validation empty",
+        "Avoids duplicating the same program-wide finding as a blocking comment on every PR",
+        "Makes no GitHub mutation"
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "Use principal-engineer-review to draft this established blocking finding as a concise review comment. The private review conversation corrected our first theory after tracing the retry path. The PR author has only seen the PR and its tests. Finding: `src/retry_cleanup.ts:42` deletes jobs using one counter that still combines normal polling with real failures, so cleanup can remove work that has not failed. Recommended safer sequence: split the polling and failure counters before running cleanup.",
+      "expected_output": "A concise standalone review comment that uses the corrected analysis without implying the PR author participated in the private investigation.",
+      "files": ["SKILL.md"],
+      "assertions": [
+        "Includes the concrete consequence and safer sequence",
+        "Uses the supplied path and line",
+        "Does not mention the private conversation, first theory, correction process, or time spent investigating",
+        "Does not use phrases such as as we discussed, after digging further, or false-inclusive we",
+        "Contains no dangling references that require the private conversation",
+        "Does not post or choose a disposition"
+      ]
     }
   ]
 }
