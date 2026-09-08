@@ -213,6 +213,7 @@ Translate that evidence into a compact reviewer orientation:
 - the main execution path or data flow
 - the invariant or contract most likely to matter
 
+When the authenticated reviewer already has a submitted review on an explicitly targeted PR, load `references/re-review-intent.md` and follow its delta inspection, prior-concern classification, intent chronology, and blocker gate. Record the required `reviewContext` instead of reviewing the current snapshot in isolation.
 ### 2. Discover stacked or dependent change programs
 
 Do not review a PR as an isolated delivery unit when its base branch, body, linked artifacts, or repository evidence shows that it is one layer of a larger change program.
@@ -260,19 +261,15 @@ trust an unsupported "no other hazards remain" conclusion.
 
 Before deciding whether a behavior is a bug or a blocker:
 
-1. Read accessible linked ADRs, issues, rollout notes, and relevant author
-   replies. Do not skip referenced context that defines intent or activation.
-2. Treat tests, feature-flag defaults, and rollout instructions as evidence of
-   intended behavior. Tests show that behavior is deliberate, but do not prove
-   the business decision is correct.
-3. State the condition that makes each concern reachable, then classify it:
+1. Read accessible linked ADRs, issues, rollout notes, and relevant author replies. Do not skip referenced context that defines intent or activation.
+2. Treat tests, feature-flag defaults, and rollout instructions as evidence of intended behavior. Tests show that behavior is deliberate, but do not prove the business decision is correct.
+3. For re-reviews or conflicting intent evidence, load `references/re-review-intent.md` and apply its chronology and blocker gate.
+4. State the condition that makes each concern reachable, then classify it:
    - **Merge-time**: reachable under defaults or the rollout included in this PR.
    - **Activation-time**: reachable only after enabling a dormant flag,
      configuration, migration phase, or future cutover.
    - **Follow-up**: outside the current acceptance criteria.
-4. When the implementation and tests deliberately encode a behavior that could
-   be valid under an unseen assumption, ask a narrow intent question before
-   labeling it a bug.
+5. When the implementation and tests deliberately encode a behavior that could be valid under an unseen assumption, ask a narrow intent question before labeling it a bug.
 
 A disabled flag does not automatically make dangerous code acceptable,
 especially for authorization, destructive actions, or data integrity. It does

@@ -250,6 +250,23 @@
         "Contains no dangling references that require the private conversation",
         "Does not post or choose a disposition"
       ]
+    },
+    {
+      "id": 18,
+      "prompt": "Use principal-engineer-review on this synthetic re-review; do not use live services. Jonathan previously reviewed https://github.com/example/app/pull/42 at commit old111 and asked that staff notes be written only for confirmed successful payment blocks. The author agreed, and intermediate commit fix222 filtered notes to blocked:true fingerprints. The current head is new333. Its latest commit is titled \"Record payment block attempts on selected accounts\", the implementation writes a note for every selected account whose fingerprint was submitted, and the current partial-response test deliberately requires a note for an account whose fingerprint was omitted from the mutation results. The PR description was not updated and still says notes are added after a successful block. No current policy, API contract, or acceptance criterion requires success-only notes, and the note text is valid for an attempted mitigation. Produce the completed review package without posting.",
+      "expected_output": "A chronological re-review that recognizes the current behavior as a deliberate semantic change, treats the older reply and PR description as stale intent evidence, and returns Comment-only or Looks ready rather than inventing a blocking regression.",
+      "files": ["SKILL.md", "references/re-review-intent.md", "references/structured-review-handoff.md"],
+      "assertions": [
+        "Identifies the task as a re-review and records old111 as the previous reviewed SHA and new333 as the current head",
+        "Inspects or reasons from the delta after the previous review rather than treating the PR as a fresh snapshot",
+        "Classifies the intermediate success-only fix as intentionally superseded rather than reintroduced or accidentally regressed",
+        "Uses the latest commit title and current test as evidence that attempt-recording is deliberate",
+        "Treats the older author reply and unchanged PR description as stale or conflicting intent evidence",
+        "Does not assign a high-confidence blocker without a current contract or intent-independent harmful consequence",
+        "Returns Comment-only or Looks ready and identifies the PR-description mismatch as non-blocking",
+        "Includes reviewContext with re-review mode, comparison basis, intentConflict, currentIntentEvidence, and staleIntentEvidence",
+        "Makes no GitHub mutation"
+      ]
     }
   ]
 }
