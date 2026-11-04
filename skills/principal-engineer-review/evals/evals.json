@@ -24,7 +24,7 @@
       "assertions": [
         "Checks whether the PR makes why, approach, validation, uncertainty, and rediscovery notes visible enough to review",
         "Does not require transcript dumps or broad process when missing reasoning is not material",
-        "Raises missing reasoning as blocking only when correctness, safety, rollback, or scope cannot be evaluated from available evidence",
+        "Returns Not enough context only when specific essential correctness, safety, or rollback evidence is unavailable; does not present uncertainty as a proven bug",
         "Recommends a durable context improvement when the missing reasoning is likely to recur"
       ]
     },
@@ -42,7 +42,7 @@
         "Validates the selected PR before beginning the AI review step and fails closed on discovery or validation errors",
         "Returns the selected PR identity, selection reason, decision, material findings, evidence, useful non-blocking feedback, and uncertainty",
         "Includes a compact orientation and context map by default unless earlier conversation demonstrates the relevant system context",
-        "Treats the review decision as analysis only and stops for human review before drafting review-comment prose, choosing a GitHub disposition, or mutating GitHub"
+        "Treats the review decision and suggested disposition as analysis only and stops for human review before drafting review-comment prose or mutating GitHub"
       ]
     },
     {
@@ -92,15 +92,16 @@
     },
     {
       "id": 7,
-      "prompt": "Review this PR scenario and decide whether it is ready to merge. The PR adds a shadow worker beside the legacy poller. `shadow_worker_enabled` will be enabled during validation, while `shadow_live_actions_enabled` stays off until a later cutover decision. The code always enqueues the legacy poll and additionally enqueues the shadow when `shadow_worker_enabled` is on. In `retry_failed_scan`, the shadow records a metric and returns unless `shadow_live_actions_enabled` is on; when on, it calls `Scanner.start_scan` and re-enqueues itself. A focused test deliberately asserts that enabling live actions calls `Scanner.start_scan`, while the legacy path remains present. The rollout notes say to validate the no-op shadow first and settle production ownership before enabling live actions, but do not say whether duplicate replacement scans during a temporary dual-live phase are intended.",
-      "expected_output": "A calibrated review that treats the duplicate live-action path as deliberate but ambiguous activation-time behavior, asks for intent if needed, and does not turn a dormant flag concern into a merge blocker.",
-      "files": [],
+      "prompt": "Review D1 and D2 in examples/closure-review-fixtures.md using only the supplied evidence. Give a merge-readiness decision for each without posting.",
+      "expected_output": "Approval for the safe bounded read-only diagnostic in D1, and a merge blocker for the implemented harmful enabled path in D2 despite both flags defaulting off.",
+      "files": ["examples/closure-review-fixtures.md"],
       "assertions": [
-        "Uses rollout notes, feature-flag defaults, and tests as evidence of intended behavior",
-        "Classifies duplicate replacement scans as activation-time rather than merge-time under the stated rollout",
-        "Asks a narrow intent question instead of asserting an ambiguous deliberate behavior is a proven bug",
-        "Distinguishes safe to merge from safe to enable",
-        "Returns Looks ready or Comment-only unless additional evidence makes the live-action path reachable now"
+        "Returns Looks ready and recommends approve for D1 based on the actual bounded read-only behavior and supplied capacity evidence",
+        "Returns Needs changes before merge for D2 despite default-off flags and deliberate tests",
+        "Connects simultaneous legacy and shadow live actions to two non-idempotent billed scans and the one-replacement contract",
+        "Labels D2 reachability activation-time without excusing its unsafe enabled path",
+        "Does not conflate an inert foundation with an implemented unsafe capability",
+        "Does not invent thresholds, durations, probabilities, approval rituals, or controls"
       ]
     },
     {
@@ -183,7 +184,7 @@
         "Does not repeat the full PR orientation",
         "Includes the concrete consequence and practical safer path",
         "Uses path and line evidence when available",
-        "Does not post or choose a disposition"
+        "Does not post or choose an action on the user's behalf; preserves the established analysis recommendation"
       ]
     },
     {
@@ -248,13 +249,13 @@
         "Does not mention the private conversation, first theory, correction process, or time spent investigating",
         "Does not use phrases such as as we discussed, after digging further, or false-inclusive we",
         "Contains no dangling references that require the private conversation",
-        "Does not post or choose a disposition"
+        "Does not post or choose an action on the user's behalf"
       ]
     },
     {
       "id": 18,
-      "prompt": "Use principal-engineer-review on this synthetic re-review; do not use live services. Jonathan previously reviewed https://github.com/example/app/pull/42 at commit old111 and asked that staff notes be written only for confirmed successful payment blocks. The author agreed, and intermediate commit fix222 filtered notes to blocked:true fingerprints. The current head is new333. Its latest commit is titled \"Record payment block attempts on selected accounts\", the implementation writes a note for every selected account whose fingerprint was submitted, and the current partial-response test deliberately requires a note for an account whose fingerprint was omitted from the mutation results. The PR description was not updated and still says notes are added after a successful block. No current policy, API contract, or acceptance criterion requires success-only notes, and the note text is valid for an attempted mitigation. Produce the completed review package without posting.",
-      "expected_output": "A chronological re-review that recognizes the current behavior as a deliberate semantic change, treats the older reply and PR description as stale intent evidence, and returns Comment-only or Looks ready rather than inventing a blocking regression.",
+      "prompt": "Use principal-engineer-review on this synthetic re-review; do not use live services. The reviewer previously reviewed https://github.com/example/app/pull/42 at commit old111 and asked that retry audit records be written only for completed retries. The author agreed, and intermediate commit fix222 filtered records to success:true jobs. The current head is new333. Its latest commit is titled \"Record retry attempts\", the implementation records every attempted retry, and the current partial-response test deliberately requires an attempt record when a job has no returned result. The PR description was not updated and still says records are added after successful retries. No current policy, API contract, or acceptance criterion requires success-only records, and the record text correctly describes an attempt. Produce the completed review package without posting.",
+      "expected_output": "A chronological re-review that recognizes the current behavior as a deliberate semantic change, treats the older reply and PR description as stale intent evidence, and recommends approval with an optional description correction rather than inventing a blocking regression.",
       "files": ["SKILL.md", "references/re-review-intent.md", "references/structured-review-handoff.md"],
       "assertions": [
         "Identifies the task as a re-review and records old111 as the previous reviewed SHA and new333 as the current head",
@@ -263,9 +264,91 @@
         "Uses the latest commit title and current test as evidence that attempt-recording is deliberate",
         "Treats the older author reply and unchanged PR description as stale or conflicting intent evidence",
         "Does not assign a high-confidence blocker without a current contract or intent-independent harmful consequence",
-        "Returns Comment-only or Looks ready and identifies the PR-description mismatch as non-blocking",
+        "Returns Looks ready with suggestedDisposition approve and identifies the PR-description mismatch as non-blocking",
         "Includes reviewContext with re-review mode, comparison basis, intentConflict, currentIntentEvidence, and staleIntentEvidence",
         "Makes no GitHub mutation"
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "Use only these paired synthetic cases; do not look up a repository or post. Case A: a complete retry review finds no material defect, existing integration coverage proves the contract, and an equivalent helper could optionally be reused. Case B: cleanup deletes jobs using a shared counter incremented by ordinary polls and processing failures; the current contract permits deletion only after actual failures. Give a decision and disposition recommendation for each.",
+      "expected_output": "Looks ready / approve for A even with optional helper feedback; Needs changes before merge / request_changes for B, grounded in the reachable deletion of work that has not failed.",
+      "files": ["SKILL.md", "references/structured-review-handoff.md"],
+      "assertions": [
+        "Recommends Looks ready and approve for A rather than Comment-only merely because optional feedback exists",
+        "Does not demand a new abstraction, extra test, or cleanup as an approval condition in A",
+        "Blocks B using verified fact, cleanup trigger, failure-only contract, and deletion of healthy work",
+        "Explains mechanism and consequence for a capable junior engineer without perfunctory praise, a lecture, or an optional laundry list",
+        "Makes no external write"
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "Use only these synthetic re-review cases; do not look up a repository or post. A platform review covered old000; a later chat review covered base111 and accepted a synchronous implementation. Current head is head222. Case A: the delta fixes all prior concerns and introduces no material defect; a queue could be an optional future design. Case B: the same delta also removes the tenant predicate, and the supplied test shows another tenant's record is returned. Case C: the same cross-tenant exposure is discovered now, but was already present at base111 and missed in the earlier review. Give decisions and explain any new blocker.",
+      "expected_output": "A convergent delta-first re-review that approves A, blocks the serious regression in B, and owns the earlier miss in C without mislabeling it as a new author regression.",
+      "files": ["SKILL.md", "references/re-review-intent.md"],
+      "assertions": [
+        "Uses base111 to head222 and closes the resolved prior concerns",
+        "Chooses the later actual chat review at base111 over the older platform submission at old000 while retaining relevant earlier concerns",
+        "Preserves the accepted synchronous tradeoff and does not require the optional queue",
+        "Returns Looks ready and recommends approval for A",
+        "Blocks B with the changed query, reachable cross-tenant request, isolation contract, and exposure",
+        "Explains why B belongs now as a delta-introduced regression",
+        "Owns the earlier miss in C and explains why its serious current consequence still blocks",
+        "Does not demand new optional acceptance work after the old fixes"
+      ]
+    },
+    {
+      "id": 21,
+      "prompt": "Compare two synthetic retry-audit re-reviews without live lookups or posting. Both have an older success-only reply and a later deliberate change to attempt records. Case A: current tests require attempts, the record text says attempted, and no current contract requires success-only records. Case B: the current replay contract requires confirmed success before skipping a retry, but the new attempt record is marked successful and causes replay to skip work that never completed. Explain intent chronology and readiness.",
+      "expected_output": "Approval for the deliberate valid tradeoff in A; a concrete blocker for the current replay-contract violation in B, even though its implementation is deliberate.",
+      "files": ["references/re-review-intent.md"],
+      "assertions": [
+        "Classifies the earlier success-only fix as intentionally superseded in A",
+        "Recommends approval in A and treats stale wording as optional",
+        "Blocks B on the current replay contract and loss of unfinished work rather than the older reply alone",
+        "Does not assume deliberate tests prove safety",
+        "Uses narrow humane questions only where the supplied evidence leaves a consequential premise uncertain"
+      ]
+    },
+    {
+      "id": 22,
+      "prompt": "Review two fully supplied synthetic delivery paths without live lookups or posting. The contract is one balance credit per event. Case A: repeated deliveries use the same event ID; an inspected unique constraint and transaction atomically insert the event ID and update the balance, and inspected replay coverage proves later deliveries do neither. Case B: the consumer generates a new event ID for each delivery and both deliveries increment the balance. Decide whether duplication blocks in each case.",
+      "expected_output": "Approval of verified harmless replay in A, and a blocker for repeated balance effects in B.",
+      "files": ["SKILL.md"],
+      "assertions": [
+        "Uses the inspected uniqueness, atomic transaction, and replay coverage to approve A",
+        "Does not demand another deduplication layer or invent duplicate downstream effects in A",
+        "Blocks B with the repeated-delivery trigger, new key per delivery, one-credit contract, and excess credit",
+        "Does not equate repeated execution with repeated harmful effects"
+      ]
+    },
+    {
+      "id": 23,
+      "prompt": "Use only these paired synthetic evidence cases; no live tools or posting. Case A: the request path and inspected representative integration coverage establish tenant isolation, but an additional stress test would be useful. Case B: the changed storage adapter's tenant filtering cannot be inspected or exercised, and the visible caller supplies no tenant predicate; no other isolation evidence is available. Give decisions and the smallest evidence ask.",
+      "expected_output": "Approval with optional stress coverage for A; Not enough context for B with a precise essential isolation gap rather than a fictional proven leak.",
+      "files": ["SKILL.md", "references/behavior-contract-closure.md"],
+      "assertions": [
+        "Returns Looks ready and recommends approve for A without requiring the optional stress test",
+        "Returns Not enough context for B rather than automatic approval or a claimed proven leak",
+        "Names the unavailable adapter tenant-filter contract and the cross-tenant exposure it must rule out",
+        "Asks only for the smallest relevant adapter evidence or representative isolation check",
+        "Invents no probability, threshold, mandatory external search, or manual safety ritual"
+      ]
+    },
+    {
+      "id": 24,
+      "prompt": "The completed review of https://github.com/example/app/pull/42 at head abc123 is Looks ready / approve with one optional finding F1: reuse the existing equivalent retry-key helper to avoid future drift; current behavior is correct. Draft that suggestion and prepare the action handoff. Do not post. The recipient has seen only the PR, not this preparation.",
+      "expected_output": "A concise standalone optional draft and internal handoff that retain Looks ready / approve and non-blocking status without authorizing any write.",
+      "files": ["SKILL.md", "references/structured-review-handoff.md"],
+      "assertions": [
+        "Preserves Looks ready and suggestedDisposition approve through drafting and handoff",
+        "Keeps F1 stable and non-blocking in internal coordination data",
+        "Does not downgrade to comment or make helper reuse a condition of approval",
+        "Omits internal F1 identifiers and private preparation details from recipient-facing prose",
+        "Uses ordinary chat without a questionnaire or perfunctory praise",
+        "Preserves exact human approval of text, target, disposition, and revision freshness before any posting",
+        "Makes no external write"
       ]
     }
   ]

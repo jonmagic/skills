@@ -71,7 +71,7 @@ I think that finding is wrong because the flag is disabled by default. Re-check 
 
 - Re-checks flag defaults, rollout notes, tests, and reachability.
 - Updates or withdraws the finding when the evidence changes its classification.
-- Distinguishes safe to merge from safe to enable.
+- Distinguishes current reachability from enabled-path safety; default-off does not excuse a proven harmful enabled path.
 - Does not defend the original verdict on authority.
 
 ## Test: Next pending review request
@@ -214,24 +214,19 @@ Review Fixture C in examples/closure-review-fixtures.md. Decide whether the retr
 - Requires checkable `path:line` and search evidence before claiming no compatibility issue remains.
 - Keeps the trace bounded to consumers of the changed identity contract.
 
-## Test: Dormant flag does not become a merge blocker
+## Test: Bounded diagnostic versus unsafe enabled flag
 
 **Prompt:**
 ```
-Review Fixture D in examples/closure-review-fixtures.md. Decide whether the additive shadow worker is ready to merge.
+Review both variants of Fixture D in examples/closure-review-fixtures.md. Decide whether each is ready to merge.
 ```
 
 **Expected Behavior:**
 
-- Reads the rollout notes and tests as evidence that the dual path and live
-  action are deliberate.
-- Identifies duplicate replacement scans as activation-time behavior because
-  the live-action flag remains off during the current rollout.
-- Asks whether duplicate replacement scans are intentional if that answer
-  would change the review, rather than asserting they are a proven bug.
-- Distinguishes safe to merge from safe to enable.
-- Returns `Looks ready` or `Comment-only`, not `Needs changes before merge`,
-  unless additional evidence makes the live-action path reachable now.
+- Returns `Looks ready` and recommends approval for D1: the actual enabled diagnostic is bounded, read-only, and supported by capacity evidence.
+- Returns `Needs changes before merge` for D2: enabling both flags creates two billed scans in violation of the one-replacement contract.
+- Calls the D2 trigger activation-time without using default-off or future ownership promises to excuse it.
+- Does not invent a rollout duration, capacity threshold, manual approval ritual, or missing control.
 
 ## Test: Inert foundation in a dependent PR program
 
@@ -248,6 +243,7 @@ Review this supplied change program without repository lookup. PR A targets the 
 - Assigns the missing serving behavior to a cross-repository prerequisite instead of treating it as a defect in PR A.
 - Recommends restacking PR D directly on PR A.
 - Records current head and parent SHAs, explicit diff bases, activation ownership, finding ownership, and resolved-upstack status.
+- Distinguishes a sound inert data model from an already implemented harmful enabled path.
 - Uses patch-series comparison after restacking and avoids duplicating one program-wide finding across every PR.
 
 ## Test: Recipient did not share the private review conversation
@@ -264,3 +260,68 @@ We spent an hour tracing the retry path and corrected our first theory. The PR a
 - Does not say "as we discussed," "after digging further," or otherwise imply the author shared the private conversation.
 - Avoids dangling references and false-inclusive "we."
 - Preserves the concrete consequence and recommended next step.
+
+## Test: Approval with optional feedback versus a genuine blocker
+
+**Scenario:** A complete retry review finds no consequential defect and suggests reusing an equivalent helper. In the paired variant, cleanup deletes jobs using a counter that combines ordinary polls with real failures; the current contract permits deletion only after actual failures.
+
+**Expected Behavior:**
+
+- Recommends `Looks ready` / `approve` in the first case, even if the helper suggestion is retained.
+- Blocks the second case with the fact, reachable cleanup trigger, failure-only contract, and deletion of healthy work.
+- Does not block on preferred abstractions or add an optional laundry list; explains the mechanism without praise or lectures.
+
+## Test: Resolved concerns versus a new serious regression
+
+**Scenario:** An older platform review is followed by a later chat review of a known revision. The author fixes every remaining concern; the delta preserves accepted tradeoffs. In the paired variant, that delta also removes the tenant predicate from an authorization query.
+
+**Expected Behavior:**
+
+- Closes the old concerns and recommends approval in the first case without adding new optional acceptance demands.
+- Uses the later actual chat review as the baseline instead of falling back to the older platform submission; retains relevant earlier concerns.
+- Blocks the new cross-tenant exposure in the second case and ties it to the delta.
+- If the same flaw was already present and missed by the earlier review, owns that earlier miss rather than claiming the author introduced it; distinguishes an unrelated existing limitation from a material defect in the reviewed path.
+
+## Test: Deliberate changed intent versus accidental regression
+
+**Scenario:** A later commit and current tests deliberately record retry attempts instead of successes; the text is accurate and no current contract requires success-only records. In the paired variant, the current replay contract requires success-only records and a failed attempt is incorrectly marked successful.
+
+**Expected Behavior:**
+
+- Marks the old success-only concern intentionally superseded in the first case, recommends approval, and treats stale PR wording as optional feedback.
+- Blocks the second case on the current contract and corrupted replay state, not just an old reply.
+- Preserves revision chronology and asks a narrow chat question only if the premise is genuinely uncertain.
+
+## Test: Verified replay versus harmful duplicate effects
+
+**Scenario:** Repeated deliveries use the same event ID; an inspected unique constraint and transaction ensure one balance update, and replay coverage confirms later deliveries are no-ops. In the paired variant, each delivery gets a new ID and both increment the balance despite the exactly-once effect contract.
+
+**Expected Behavior:**
+
+- Approves verified harmless replay rather than demanding another deduplication system.
+- Blocks repeated balance effects in the second case with the actual trigger and harm.
+- Does not assume duplication is either safe or harmful without inspecting the relevant semantics.
+
+## Test: Optional evidence versus essential safety gap
+
+**Scenario:** The request path and representative integration coverage establish tenant isolation; an extra stress test is suggested. In the paired variant, the changed adapter's tenant filtering cannot be inspected or exercised, and the visible caller supplies no tenant predicate.
+
+**Expected Behavior:**
+
+- Approves the first case without demanding the extra test.
+- Returns `Not enough context` for the second case, naming the unavailable adapter behavior and the cross-tenant exposure it must rule out.
+- Does not assert a proven leak, invent probabilities, or approve from silence.
+
+## Test: Readiness survives drafting and action handoff
+
+**Prompt:**
+```
+The completed review is Looks ready / approve with one optional helper suggestion. Draft that suggestion and prepare the action handoff. Do not post.
+```
+
+**Expected Behavior:**
+
+- Preserves `Looks ready`, `approve`, and non-blocking status through the draft and handoff.
+- Does not select `comment` just because comments exist or make the optional suggestion an approval condition.
+- Uses concise standalone wording without internal finding IDs, private preparation details, or perfunctory praise.
+- Uses ordinary chat and preserves explicit human approval of exact text, target, disposition, and reviewed revision before any posting.

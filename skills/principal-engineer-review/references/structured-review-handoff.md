@@ -63,13 +63,13 @@ Use this shape:
 Contract:
 
 1. `decision` is one of the four allowed review decisions.
-2. `suggestedDisposition` is `approve`, `comment`, or `request_changes`, derived from the analysis but never authorization to post.
+2. `suggestedDisposition` is `approve`, `comment`, or `request_changes`, derived from the analysis but never authorization to post. A completed ready review retains `approve` even when it contains optional feedback.
 3. `reviewContext` is required for GitHub PRs. `mode` is `initial` or `re-review`. Re-reviews require the previous reviewed SHA, exact comparison basis, and compact current versus stale intent evidence. Set `intentConflict` when current-head behavior conflicts with older replies, intermediate fixes, or PR text.
 4. `changeProgram` is required. `relationship` is exactly `standalone`, `native-stack`, `dependent-branch-chain`, or `linked-change-program`; never invent another value. Use `standalone` and null or empty values when no larger program is present. `layerPosition` is a short string or null. `parentUrl` and `parentSha` identify the reviewed parent revision or are null. `diffBasis` is the exact comparison used. `activationOwner` is a repository-qualified URL, named activation step, or null. `crossRepositoryPrerequisites` is an array of objects with `description`, `targetUrl` (nullable when no artifact exists), and `status`.
 5. Every finding gets a stable `findingId`; downstream workflows must preserve it.
 6. `blocking`, `confidence`, `programStatus`, `owningTarget`, `reachability`, `resolvedUpstack`, `verifiedFact`, `interpretation`, and `consequence` are required. `confidence` is `high`, `medium`, or `low`. `programStatus` is `request_changes_here`, `block_program_activation`, `resolved_upstack`, `cross_repository_prerequisite`, or `follow_up_here`. `reachability` is `merge-time`, `activation-time`, or `follow-up`.
 7. `owningTarget` is a repository-qualified URL, or null only for `cross_repository_prerequisite` when no target artifact exists; in that case `changeProgram.crossRepositoryPrerequisites` must describe the missing target. Include `path` and `line` only when verified against the reviewed revision; use `null` rather than guessing.
-8. Make uncertainty explicit; it may be `null` for a proven issue.
+8. Make uncertainty explicit; it may be `null` for a proven issue. Include the reachable trigger and affected contract in the evidence and consequence fields. An essential missing safety proof is uncertainty, not a fictional verified defect; optional missing evidence does not block.
 9. Use `feedbackPlacement: inline` for a localized stable anchor, `summary` for a cross-cutting concern that belongs on the current target, and `evidence-only` when `resolvedUpstack` is true or the finding belongs on another or not-yet-created target. Downstream drafting must skip `evidence-only` findings.
 10. The handoff contains no polished comment prose and performs no external write.
 11. `validation.checks` contains objects with `name` and `result`, where `result` is `passed`, `failed`, or `inconclusive`. If no checks ran, `validation.missing` must say what was not validated; never leave both arrays empty.
@@ -84,3 +84,5 @@ Disposition guidance:
 - `Not enough context` -> `comment`
 
 This mapping preserves review intent for downstream drafting but does not replace the separate human approval gate.
+
+Drafting or handing off an action must preserve `decision`, `suggestedDisposition`, stable finding identities, and blocking versus optional status. Do not downgrade readiness because optional comments are drafted, or promote suggestions into conditions for approval. Reopen analysis only for new material evidence or a changed revision; then explain the change and obtain fresh approval of the exact target, text, and disposition before posting. Never expose internal handoff identifiers or private preparation context in recipient-facing text.

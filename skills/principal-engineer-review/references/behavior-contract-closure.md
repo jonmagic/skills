@@ -143,9 +143,11 @@ actually inspected. A status word without checkable evidence is incomplete.
 - A concrete, reachable, unguarded hazard is `Needs changes before merge`.
 - If required high-risk evidence cannot be obtained in the review environment,
   use `Not enough context` and name the specific validation or artifact needed.
+- Explain the exact contract and consequential failure the missing evidence prevents judging; a high-risk label alone does not make every additional test essential. Optional evidence gaps do not block approval.
 - Do not use `Not enough context` as a substitute for searches or reads the
   reviewer can perform.
 - Do not return `Looks ready` when validation proves only a proxy for the layer
   where the material risk occurs.
 - Routine reviews remain bounded; do not add exhaustive tracing when no
   behavior-sensitive or high-risk signal is present.
+- Apply the flag and replay gates in `SKILL.md`: an unsafe implemented enabled path is not excused by default-off, and verified idempotent replay is not a duplicate-effect defect.

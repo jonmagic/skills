@@ -136,23 +136,39 @@ def serialize(command):
 
 Persisted records and replay routing use `handler_type == "capture_payment"`.
 
-## Fixture D: additive shadow with a dormant live-action flag
+## Fixture D: bounded observation versus unsafe live actions
 
-PR intent:
+### D1: safe diagnostic worker
 
-- Add a shadow worker beside the legacy poller.
-- Enable `shadow_worker_enabled` during validation.
-- Keep `shadow_live_actions_enabled` off until a later cutover decision.
-- Compare both paths before changing production ownership.
-
-The tests deliberately assert that the shadow starts a replacement scan when
-live actions are enabled, while the legacy path remains present.
+PR intent: compare status observations beside the legacy poller during a bounded diagnostic rollout. Enabling `shadow_worker_enabled` adds one read-only observation per existing poll; only the legacy path can create replacement scans. The scanner status API has no writes or billing effects, and representative validation confirms the extra read fits the existing service capacity. The rollout names the observation window and disables the diagnostic afterward.
 
 ```ruby
 # app/consumers/publish_package_consumer.rb
 LegacyPoll.enqueue(job)
 ShadowPoll.enqueue(job) if Flipper.enabled?(:shadow_worker_enabled)
 ```
+
+```ruby
+# app/consumers/shadow_poll_worker.rb
+def retry_failed_scan(job)
+  status = Scanner.status(job.scan_id)
+  stats.increment("shadow.observed_status", tags: ["status:#{status}"])
+end
+```
+
+```ruby
+# test/consumers/shadow_poll_worker_test.rb
+it "observes without starting a replacement scan" do
+  Scanner.expects(:status).with(failed_job.scan_id).returns("failed")
+  Scanner.expects(:start_scan).never
+
+  worker.retry_failed_scan(failed_job)
+end
+```
+
+### D2: unsafe implemented live branch
+
+Use the same enqueue path, but replace the worker with this implementation:
 
 ```ruby
 # app/consumers/shadow_poll_worker.rb
@@ -165,16 +181,4 @@ def retry_failed_scan(job)
 end
 ```
 
-```ruby
-# test/consumers/shadow_poll_worker_test.rb
-it "starts a replacement scan when live actions are enabled" do
-  Flipper.enable(:shadow_live_actions_enabled)
-  Scanner.expects(:start_scan).once
-
-  worker.retry_failed_scan(failed_job)
-end
-```
-
-The rollout notes say to validate the no-op shadow first and settle production
-ownership before enabling live actions. They do not say whether duplicate
-replacement scans during a temporary dual-live phase are intended.
+Both flags default off. The legacy poller still calls `Scanner.start_scan` for the same failed job when both paths run. The API creates and bills a new scan for every call, with no idempotency key or deduplication; the current contract permits one billed replacement per failed job. A focused test deliberately asserts the shadow's live action. Rollout notes promise to settle ownership before a later cutover, but the live branch is already implemented. Judge safety when enabled, not just the current defaults.

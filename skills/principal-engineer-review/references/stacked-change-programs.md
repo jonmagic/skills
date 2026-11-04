@@ -24,6 +24,8 @@ Keep focused PRs separate when their boundaries improve review, deployment, roll
 
 Name the exact PR, flag, migration, UI, configuration, or deployment step that makes dormant behavior reachable. Lower layers may be safe to merge while program activation remains blocked.
 
+An inert layer has a sound contract without the later functionality; it is not an implemented unsafe capability hidden behind a disabled flag. Apply the enabled-path safety gate in `SKILL.md` before allowing a lower layer to merge. Bounded diagnostics or gradual observation must be safe in the actual enabled state, not merely described as temporary.
+
 Assign every finding to one status and owning target:
 
 - `request_changes_here`: the owning layer is incorrect or unsafe in an intended reachable state.

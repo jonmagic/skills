@@ -27,7 +27,7 @@ Once a review has been requested, widen scrutiny when the change touches product
 
 Do not use this skill when no review was asked for. Writing, debugging, refactoring, or operating code that happens to touch those areas is implementation work, not a review request. Subject matter alone does not activate this skill.
 
-Do not use this skill as a replacement for PR creation or PR iteration workflows. Use `create-pr` when the work ends in a new PR, and `manage-pr` when driving an existing PR through review comments, Copilot Code Review, CI, or merge readiness.
+Do not use this skill as a replacement for PR creation or author-side iteration through feedback, CI, or merge. Follow the repository's workflow for those actions; no other skill is required to perform this review.
 
 ## Compose With Existing Skills and Tools
 
@@ -36,20 +36,20 @@ Prefer specialized tools for the parts they own:
 1. Use built-in code review tooling when available to get baseline diff findings.
 2. Use built-in security review tooling for security-sensitive changes, or whenever the user explicitly asks for security review.
 3. Use one built-in rubber-duck subagent for high-stakes, ambiguous, broad-blast-radius, or architecture-heavy changes where an independent hostile critique is worth the cost. If a fresh opposite-provider review already covers the same artifact and material risks, reuse that evidence instead of launching another reviewer.
-4. Use repo-specific non-browser validation paths for end-to-end checks. `safe-browser-driving` is reserved exclusively for `chatgpt-to-daily-project` and must not be invoked directly or indirectly from this skill.
-5. Use `create-pr` before pushing/opening a new PR, and `manage-pr` when addressing review comments or waiting for CI/CCR.
+4. Use repository-native validation for end-to-end checks; do not install tools or add workflow dependencies just to review.
+5. Keep review analysis separate from author-side PR lifecycle actions.
 6. For architecture, API compatibility, platform abstraction, or service/team-boundary reviews, optionally load `references/design-lens.md`; use at most 1-3 principles when they materially change a finding.
 7. Use a voice or style skill if one is installed and the user asks for review comments in their voice.
 
 Do not forward raw subagent or tool output. Re-rank findings by principal-engineer impact, drop low-signal noise, and state uncertainty plainly.
 
-Prefer direct repository evidence over another model. Do not stack rubber-duck, code-review, and security-review agents for the same uncertainty. If the review and one independent critic disagree on a consequential claim, inspect the code, tests, and runtime contracts first; use `roundtable` for conditional third-provider adjudication only when direct verification cannot resolve it.
+Prefer direct repository evidence over another model. Do not stack rubber-duck, code-review, and security-review agents for the same uncertainty. If the review and one independent critic disagree on a consequential claim, inspect the code, tests, and runtime contracts first; consider another independent perspective only when direct verification cannot resolve it. If these tools are unavailable, review directly and name any material evidence gap.
 
 ## Review Posture
 
 Be direct, specific, evidence-based, and context-dependent. Optimize for the smallest set of comments that would materially improve the change.
 
-Do not comment on style, formatting, naming, or theoretical improvements unless they affect correctness, security/privacy, data integrity, maintainability, or the business outcome.
+Do not comment on style, formatting, naming, or theoretical improvements unless they have a concrete material consequence. No material blocker means recommend approval, even with useful optional feedback. Early feedback can be comment-only while review is incomplete; optional suggestions alone do not make a completed review unready.
 
 Push back on unnecessary scope with concrete questions:
 
@@ -60,6 +60,8 @@ Push back on unnecessary scope with concrete questions:
 5. What behavior becomes harder to change six months from now?
 
 Prefer plain, question-led feedback when appropriate. Avoid turning a concrete concern into a broad thesis.
+
+Before blocking, connect a verified fact to a reachable trigger, the affected contract, and actual harm. A broad risk category, preferred abstraction, maintenance or scope preference, extra test, or hypothetical future is not that chain. Distinguish new defects from existing limitations and deliberate tradeoffs. If essential safety evidence is missing, name the precise uncertainty and why it prevents a decision; do not invent a proven bug or approve by default. Do not invent thresholds, probabilities, manual rituals, or controls to justify a finding.
 
 ## Reviewer Context Contract
 
@@ -82,8 +84,11 @@ Adapt depth to demonstrated knowledge:
 - Explain the concrete failure mode or tradeoff and why a proposed change helps, including what it does not solve.
 - Separate verified facts, interpretation, and unresolved questions.
 - Use simple language without flattening technical detail or becoming patronizing.
+- Explain the mechanism and consequence for a capable junior engineer encountering this system for the first time; omit lectures and perfunctory praise.
 
 Keep the initial response compact. Do not dump a file-by-file tour, every explored hypothesis, or a comprehensive architecture lesson. Give the user a useful review package, then make the available deeper paths obvious.
+
+Ground explanations in current code and contracts, relevant issues, ADRs and author replies, inspected comparable code, or precise public platform documentation when it resolves a material question. No source quotas or mandatory external searches. Optional guidance: [review standards](https://google.github.io/eng-practices/review/reviewer/standard.html) and [writing comments](https://google.github.io/eng-practices/review/reviewer/comments.html).
 
 ### Pair-Partner Contract
 
@@ -93,6 +98,7 @@ Treat follow-up questions as part of the review rather than as a new workflow.
 - When challenged, re-check the evidence and update the finding instead of defending the first answer.
 - If the available artifacts cannot establish an answer, state exactly what is unknown and name the smallest source, test, owner answer, or runtime evidence that would resolve it.
 - Never imply that the user should trust a conclusion merely because it came from a principal engineer lens.
+- Prefer ordinary chat for review discussion, narrow questions, and approval of drafts; do not introduce a questionnaire.
 
 ## Invocation Modes
 
@@ -173,14 +179,14 @@ A re-requested PR remains ineligible when the user has any submitted review on i
 After selecting a PR, run the complete review workflow below. Return a review package containing:
 
 1. The selected PR title, full URL, author handle, and whether selection came from a direct or team request.
-2. The review decision, material findings with evidence, useful non-blocking feedback, what looks right, and unresolved uncertainty.
+2. The review decision, material findings with evidence, only useful non-blocking feedback, and unresolved uncertainty.
 3. A compact orientation and context map sufficient to understand the material findings.
 4. A short selection note: newest eligible direct request, or newest eligible team request because no direct request qualified.
 5. An explicit statement that no GitHub review, comment, approval, or request for changes was posted.
 
-Stop after the review package. Do not turn the findings into final review-comment prose or choose a GitHub review disposition until the user has reviewed the analysis and asks to work on the response. Posting remains a separate explicit approval gate.
+Stop after the review package. Do not turn the findings into final review-comment prose until the user has reviewed the analysis and asks to work on the response. Posting remains a separate explicit approval gate.
 
-The review decision in the package is an analysis verdict only. It does not select or authorize a GitHub `approve`, `comment`, or `request changes` disposition.
+The review decision and suggested disposition are analysis only. Recommend `approve` when ready, but do not select an action on the user's behalf or authorize a GitHub write.
 
 ## Review Workflow
 
@@ -213,7 +219,8 @@ Translate that evidence into a compact reviewer orientation:
 - the main execution path or data flow
 - the invariant or contract most likely to matter
 
-When the authenticated reviewer already has a submitted review on an explicitly targeted PR, load `references/re-review-intent.md` and follow its delta inspection, prior-concern classification, intent chronology, and blocker gate. Record the required `reviewContext` instead of reviewing the current snapshot in isolation.
+For a re-review, including an earlier review in chat, load `references/re-review-intent.md`. Start from the reviewed baseline, accepted intent and tradeoffs, prior concerns, and current delta rather than reopening the whole snapshot. Preserve intent chronology and explain why any new blocker belongs now. Record the required `reviewContext` for GitHub PRs.
+
 ### 2. Discover stacked or dependent change programs
 
 Do not review a PR as an isolated delivery unit when its base branch, body, linked artifacts, or repository evidence shows that it is one layer of a larger change program.
@@ -222,7 +229,7 @@ Load `references/stacked-change-programs.md` when stack metadata, a non-default 
 
 Set `changeProgram.relationship` to exactly `native-stack`, `dependent-branch-chain`, or `linked-change-program`; a sequence where each PR branch targets the preceding PR branch is always `dependent-branch-chain`, even when cross-repository prerequisites also exist.
 
-Do not reject an explicit inert foundation solely because it does not activate the final behavior by itself. Do not approve an activation or keystone layer merely because a later or unlinked PR is expected to complete a required safety property.
+Do not reject an explicit inert foundation solely because it does not activate the final behavior by itself. This is not permission to merge an implemented capability that is unsafe when its flag is enabled. Do not approve an activation or keystone layer merely because a later or unlinked PR is expected to complete a required safety property.
 
 ### 3. Inspect the surrounding code
 
@@ -271,16 +278,9 @@ Before deciding whether a behavior is a bug or a blocker:
    - **Follow-up**: outside the current acceptance criteria.
 5. When the implementation and tests deliberately encode a behavior that could be valid under an unseen assumption, ask a narrow intent question before labeling it a bug.
 
-A disabled flag does not automatically make dangerous code acceptable,
-especially for authorization, destructive actions, or data integrity. It does
-mean the review must distinguish "safe to merge" from "safe to enable." Do not
-return `Needs changes before merge` for an activation-time concern unless the
-current rollout enables it, merging exposes it despite the default, or the
-dormant capability itself violates a required safety or rollback contract.
+A disabled flag establishes current reachability, not safety when enabled. An implemented capability with a concrete harmful enabled path still blocks even when default-off. Distinguish that defect from genuinely absent future functionality in a sound inert layer. A bounded diagnostic or gradual observation rollout may proceed only when the actual enabled behavior is safe within its stated bounds; name the observed behavior and evidence, not imagined controls. Do not use a future cutover promise to excuse an unsafe live-action branch.
 
-Preserve this distinction when synthesizing tool or subagent findings. If the
-evidence says "safe to merge, unsafe to enable," do not collapse that into a
-merge blocker.
+For suspected duplicate effects, inspect idempotency keys, deduplication, persistence, downstream effects, and replay semantics as relevant. Verified harmless replay is not a bug; repeated charges, conflicting writes, lost work, or other concrete harm can block. Where intent or effects remain uncertain, ask a narrow question rather than declaring every duplicate harmful or harmless.
 
 ### 6. Evaluate material risk
 
@@ -297,22 +297,15 @@ Review for these concerns in priority order:
 
 ### 7. Triage findings
 
-Only raise comments that meet at least one of these bars:
+Apply the material-consequence gate, not a checklist of risk labels. For each blocker state the fact, trigger, affected contract, and harm with checkable evidence. Keep essential missing safety evidence separate from a proven defect. Extra tests, preferred reuse, broader cleanup, or scope reduction are optional unless the actual consequence justifies blocking.
 
-1. The change can ship wrong behavior, break an important path, or make rollback difficult.
-2. The change introduces a credible security, privacy, compliance, or data-integrity risk.
-3. The change duplicates or bypasses an existing primitive in a way that will create drift.
-4. The change adds scope, abstraction, dependency, or optimization not needed for the business problem.
-5. The change makes future maintenance materially harder without a clear tradeoff.
-6. The tests miss a meaningful edge case tied to the changed behavior.
+Re-review toward closure: mark old concerns addressed or intentionally superseded, preserve accepted tradeoffs, and do not replace fixed blockers with new optional acceptance demands. A real newly discovered serious regression can still block; explain whether it comes from the delta, a newly established consequential interaction or contract, or an earlier miss. Own earlier misses plainly.
 
-Blocking comments should generally be limited to correctness, security/privacy, authorization, data integrity, operational risk, or scope that materially increases maintenance without solving the business problem.
-
-Do not leave "consider..." comments unless the consideration has a concrete consequence. If the issue is real, say what can fail and what simpler or safer shape would address it.
+Suppress nits and long optional laundry lists. Keep only feedback that materially helps this change; omit "consider..." comments without a concrete consequence.
 
 ### 8. Check the visible reasoning
 
-Missing reasoning is not automatically blocking. It becomes blocking when reviewers cannot evaluate correctness, safety, rollback, or scope without reconstructing the author's thought process from the diff.
+Missing reasoning is not automatically blocking. Ask only for evidence essential to judging a specific correctness, safety, or rollback contract that current artifacts cannot establish. An extra test, fuller explanation, or preferred process is not an acceptance requirement by itself.
 
 Ask for the smallest useful explanation:
 
@@ -400,9 +393,6 @@ This changes how replacement jobs are counted during retry cleanup. Today normal
 **Non-blocking**
 1. `jobs/retry_cleanup.rb:45` - This duplicates the existing retry-key normalization helper. Reusing it would reduce drift, but this can be follow-up if the new key format is intentionally different.
 
-**What looks right**
-The change keeps the data model unchanged and avoids introducing a worker for a synchronous path, which seems like the right MVP scope.
-
 **Open questions**
 Can new polling work enter the shared counter while cleanup is running?
 
@@ -424,9 +414,8 @@ For a small or familiar change, collapse or omit the orientation and context map
 
 Possible decisions:
 
-- `Looks ready` — no material issues found, and any required high-risk closure
-  evidence is complete.
-- `Comment-only` — useful non-blocking feedback, but nothing that should block.
+- `Looks ready` — no material blocker remains and essential safety evidence is sufficient; recommend approval even with useful optional feedback.
+- `Comment-only` — interim feedback while review is incomplete, without a final readiness recommendation; not the default for a completed review with optional suggestions.
 - `Needs changes before merge` — at least one concrete, reachable, unguarded
   blocking issue.
 - `Not enough context` — the target cannot be reviewed responsibly because
@@ -446,7 +435,7 @@ For high-risk reviews, include the concise `Closure evidence` block from
 - Build a compact mental model so reviewers with limited repository context can participate.
 - Answer follow-up questions and deepen only the parts the user needs.
 - Select the next open, non-draft, not-yet-reviewed GitHub review request in read-only `next` mode, prioritizing direct requests over team requests.
-- Reuse built-in review tooling, validation tools, and PR-management skills instead of duplicating them.
+- Reuse available review and validation tools without requiring other skills.
 - Distinguish blocking findings from non-blocking follow-up.
 - Review dependent PRs as one change program without losing layer ownership or intermediate-state safety.
 - Draft concise, evidence-based review comments when asked.
@@ -457,7 +446,7 @@ For high-risk reviews, include the concise `Closure evidence` block from
 
 - Generate style nits or low-consequence suggestions to look busy.
 - Replace security review for security-sensitive changes.
-- Create or manage PRs instead of using `create-pr` or `manage-pr`.
+- Create or manage PRs as part of review analysis.
 - Draft the final response during the first `next` pass before the user reviews the findings.
 - Post review comments, approvals, requests for changes, reactions, labels, or other GitHub mutations without explicit approval of the exact target, text, and disposition.
 - Treat missing tests, docs, or reasoning as blocking unless the gap prevents safe review or release.

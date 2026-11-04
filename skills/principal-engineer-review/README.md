@@ -51,11 +51,15 @@ gh skill install jonmagic/skills principal-engineer-review --scope user
 - Prioritizes material findings over style or formatting nits
 - Checks for existing primitives before accepting new helpers, dependencies, queues, storage, or abstractions
 - Separates blocking review feedback from non-blocking follow-up
+- Recommends approval when no material blocker remains, even with useful optional feedback
+- Re-reviews the delta against prior concerns and accepted tradeoffs without moving the acceptance bar
+- Checks actual harmful effects before blocking on duplication, and does not excuse unsafe enabled code behind default-off flags
 - Calls out missing reasoning when reviewers cannot evaluate safety, rollback, validation, or scope from the PR alone
 - Uses an optional design lens for architecture, API, platform, and service-boundary reviews without turning ordinary PR review into a law catalog
 - Produces a structured evidence handoff that preserves finding identity, ownership, reachability, and review freshness
 - Keeps private review deliberation out of recipient-facing comments unless the visible thread establishes that context
 - Drafts concise review comments on request and requires exact approval before posting
+- Preserves readiness and optional-feedback status through drafting and action handoff
 - Stops after the review package in `next` mode so you can inspect the findings before working on the response
 
 See `SKILL.md` for the full workflow.
